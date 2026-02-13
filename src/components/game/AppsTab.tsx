@@ -9,14 +9,15 @@ import AppleMusicApp from '@/components/apps/AppleMusicApp';
 import YouTubeApp from '@/components/apps/YouTubeApp';
 import XApp from '@/components/apps/XApp';
 import StudioApp from '@/components/apps/StudioApp';
+import AdminApp from '@/components/apps/AdminApp';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Mic2 } from 'lucide-react';
+import { ChevronLeft, Mic2, Shield } from 'lucide-react';
 
 interface Props {
   profile: Profile;
 }
 
-type AppType = 'spotify' | 'apple-music' | 'youtube' | 'x' | 'studio' | null;
+type AppType = 'spotify' | 'apple-music' | 'youtube' | 'x' | 'studio' | 'admin' | null;
 
 const apps = [
   { id: 'spotify' as const, name: 'Spotify', logo: spotifyLogo, bgClass: 'bg-[#121212]' },
@@ -24,6 +25,7 @@ const apps = [
   { id: 'youtube' as const, name: 'YouTube', logo: youtubeLogo, bgClass: 'bg-[#0f0f0f]' },
   { id: 'x' as const, name: 'X', logo: xLogo, bgClass: 'bg-[#000000]' },
   { id: 'studio' as const, name: 'Studio', logo: null, bgClass: 'bg-gradient-to-br from-[#1db954] to-[#148a3c]' },
+  { id: 'admin' as const, name: 'Admin', logo: null, bgClass: 'bg-gradient-to-br from-[#ef4444] to-[#f97316]' },
 ];
 
 export default function AppsTab({ profile }: Props) {
@@ -50,6 +52,7 @@ export default function AppsTab({ profile }: Props) {
           {openApp === 'youtube' && <YouTubeApp profile={profile} />}
           {openApp === 'x' && <XApp profile={profile} />}
           {openApp === 'studio' && <StudioApp profile={profile} />}
+          {openApp === 'admin' && <AdminApp profile={profile} />}
         </motion.div>
       </AnimatePresence>
     );
@@ -65,9 +68,11 @@ export default function AppsTab({ profile }: Props) {
             onClick={() => setOpenApp(app.id)}
             className="flex flex-col items-center gap-3 group"
           >
-            <div className={`app-icon overflow-hidden flex items-center justify-center ${app.id === 'studio' ? app.bgClass : 'bg-secondary'}`}>
+            <div className={`app-icon overflow-hidden flex items-center justify-center ${app.id === 'studio' || app.id === 'admin' ? app.bgClass : 'bg-secondary'}`}>
               {app.logo ? (
                 <img src={app.logo} alt={app.name} className="w-full h-full object-contain p-2" />
+              ) : app.id === 'admin' ? (
+                <Shield className="w-8 h-8 text-white" />
               ) : (
                 <Mic2 className="w-8 h-8 text-white" />
               )}
