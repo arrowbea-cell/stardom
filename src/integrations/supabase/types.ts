@@ -322,6 +322,7 @@ export type Database = {
           cover_url: string | null
           created_at: string
           id: string
+          radio_spins: number
           release_turn: number
           streams: number
           title: string
@@ -331,6 +332,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           id?: string
+          radio_spins?: number
           release_turn?: number
           streams?: number
           title: string
@@ -340,6 +342,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           id?: string
+          radio_spins?: number
           release_turn?: number
           streams?: number
           title?: string
