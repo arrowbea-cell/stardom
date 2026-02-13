@@ -167,6 +167,12 @@ Deno.serve(async (req) => {
         });
       }
 
+      case "test": {
+        return new Response(JSON.stringify({ success: true, message: "Authenticated" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Unknown action" }), {
           status: 400,
