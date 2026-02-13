@@ -57,18 +57,16 @@ export default function AdminApp({ profile }: Props) {
 
   const handleUnlock = async () => {
     setLoading(true);
-    // Test the password by calling a harmless action
     try {
       const res = await supabase.functions.invoke('admin-actions', {
         body: { password, action: 'test' },
       });
-      const data = res.data as any;
-      if (data?.error === 'Unauthorized') {
+      if (res.error) {
         toast.error('Wrong password');
         setLoading(false);
         return;
       }
-      // Even "Unknown action" means password was accepted
+      // Any non-error response means password was accepted
       setUnlocked(true);
       toast.success('Admin panel unlocked');
     } catch {
