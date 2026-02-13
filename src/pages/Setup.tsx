@@ -1,6 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 import { uploadArtistImage } from '@/lib/supabase-helpers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +14,7 @@ const MONEY_OPTIONS = [5000, 10000, 50000, 100000, 500000];
 
 export default function Setup() {
   const { user } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
   const [artistName, setArtistName] = useState('');
@@ -20,6 +22,12 @@ export default function Setup() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!profileLoading && profile) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [profile, profileLoading, navigate]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -66,7 +74,7 @@ export default function Setup() {
         <div className="text-center mb-6">
           <Disc3 className="w-10 h-10 text-primary mx-auto mb-3 animate-spin" style={{ animationDuration: '3s' }} />
           <h1 className="text-2xl font-display font-bold">Create Your Artist</h1>
-          <p className="text-muted-foreground text-sm mt-1">Set up your music career</p>
+          <p className="text-muted-foreground text-sm mt-1">Begin your rise to stardom</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
