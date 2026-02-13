@@ -3,7 +3,7 @@ import { Profile } from '@/hooks/useProfile';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatNumber } from '@/lib/supabase-helpers';
-import { Search, Home, Library, ChevronRight, ChevronLeft, Play, Clock, Music, Shuffle, SkipBack, SkipForward, Pause, Heart, Plus, X, Edit3, Check, User, MoreHorizontal, Bell, Settings, Share2, ListMusic } from 'lucide-react';
+import { Search, Home, Library, ChevronRight, ChevronLeft, Play, Clock, Music, Shuffle, SkipBack, SkipForward, Pause, Heart, Plus, X, Edit3, Check, User, MoreHorizontal, Bell, Settings, Share2, ListMusic, BarChart3, TrendingUp } from 'lucide-react';
 import spotifyLogo from '@/assets/spotify-logo.png';
 
 interface Props {
@@ -18,7 +18,7 @@ interface Song {
   artist_id: string;
 }
 
-type SpotifySection = 'home' | 'search' | 'library' | 'artist' | 'playlist' | 'now-playing';
+type SpotifySection = 'home' | 'search' | 'library' | 'artist' | 'playlist' | 'now-playing' | 'charts';
 
 interface Playlist {
   id: string;
