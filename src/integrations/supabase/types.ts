@@ -157,10 +157,50 @@ export type Database = {
         }
         Relationships: []
       }
+      post_likes: {
+        Row: {
+          boost_amount: number
+          created_at: string
+          id: string
+          liked_artist_id: string
+          liker_id: string
+        }
+        Insert: {
+          boost_amount?: number
+          created_at?: string
+          id?: string
+          liked_artist_id: string
+          liker_id: string
+        }
+        Update: {
+          boost_amount?: number
+          created_at?: string
+          id?: string
+          liked_artist_id?: string
+          liker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_likes_liked_artist_id_fkey"
+            columns: ["liked_artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_likes_liker_id_fkey"
+            columns: ["liker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           apple_music_listeners: number
           artist_name: string
+          artist_pick: string | null
           avatar_url: string | null
           bio: string | null
           created_at: string
@@ -178,6 +218,7 @@ export type Database = {
         Insert: {
           apple_music_listeners?: number
           artist_name: string
+          artist_pick?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
@@ -195,6 +236,7 @@ export type Database = {
         Update: {
           apple_music_listeners?: number
           artist_name?: string
+          artist_pick?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
