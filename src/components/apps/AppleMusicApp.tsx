@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { Profile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { formatNumber } from '@/lib/supabase-helpers';
-import { Search, Play, Music, Radio, LayoutGrid, Heart, Shuffle, ListMusic, User, X } from 'lucide-react';
+import { Search, Play, Music, Radio, LayoutGrid, Heart, Shuffle, ListMusic, User, X, BarChart3, TrendingUp, ChevronLeft } from 'lucide-react';
 
 interface Props {
   profile: Profile;
 }
 
-type Section = 'listen' | 'browse' | 'search' | 'library' | 'artist';
+type Section = 'listen' | 'browse' | 'search' | 'library' | 'artist' | 'charts';
 
 export default function AppleMusicApp({ profile }: Props) {
   const [section, setSection] = useState<Section>('listen');
