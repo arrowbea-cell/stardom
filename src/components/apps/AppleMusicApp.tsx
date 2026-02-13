@@ -85,15 +85,25 @@ export default function AppleMusicApp({ profile }: Props) {
           <div className="px-4 mb-6">
             <h2 className="text-xl font-bold mb-3">Stations For You</h2>
             <div className="flex gap-3 overflow-x-auto pb-2">
-              {['Chill', 'Hits', 'New Music', 'Pop'].map((name, i) => (
-                <div key={name} className="min-w-[140px]">
-                  <div className="w-[140px] h-[140px] rounded-xl mb-2 flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${['#fc3c44','#af52de','#ff9f0a','#30d158'][i]}, ${['#ff6b6b','#5856d6','#ff375f','#34c759'][i]})` }}>
-                    <Radio className="w-10 h-10 text-white/60" />
+              {['Chill', 'Hits', 'New Music', 'Pop'].map((name, i) => {
+                const stationArtist = allArtists[i];
+                return (
+                  <div key={name} className="min-w-[140px]">
+                    <div className="w-[140px] h-[140px] rounded-xl mb-2 flex items-center justify-center overflow-hidden relative" style={{ background: `linear-gradient(135deg, ${['#fc3c44','#af52de','#ff9f0a','#30d158'][i]}, ${['#ff6b6b','#5856d6','#ff375f','#34c759'][i]})` }}>
+                      {stationArtist?.avatar_url ? (
+                        <img src={stationArtist.avatar_url} alt="" className="w-full h-full object-cover opacity-60" />
+                      ) : (
+                        <Radio className="w-10 h-10 text-white/60" />
+                      )}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Radio className="w-8 h-8 text-white/80" />
+                      </div>
+                    </div>
+                    <p className="text-sm font-semibold">{name} Station</p>
+                    <p className="text-xs text-[#8e8e93]">Apple Music</p>
                   </div>
-                  <p className="text-sm font-semibold">{name} Station</p>
-                  <p className="text-xs text-[#8e8e93]">Apple Music</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 

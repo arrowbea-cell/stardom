@@ -118,6 +118,12 @@ export default function SpotifyApp({ profile }: Props) {
 
   const playlistColors = ['#1e3264', '#e8115b', '#148a08', '#e91429', '#8400e7', '#1e3264', '#f59b23', '#dc148c'];
 
+  // Use artist avatars as playlist cover images
+  const getPlaylistImage = (artistIndex: number) => {
+    const artist = allArtists[artistIndex % allArtists.length];
+    return artist?.avatar_url || null;
+  };
+
   const generatedPlaylists: Playlist[] = [
     { id: 'daily-mix-1', name: 'Daily Mix 1', description: `${profile.artist_name} and more`, color: playlistColors[0], songs: allSongs.slice(0, 6) },
     { id: 'top-hits', name: "Today's Top Hits", description: 'The hottest tracks right now', color: playlistColors[1], songs: allSongs.slice(0, 10) },
@@ -184,7 +190,7 @@ export default function SpotifyApp({ profile }: Props) {
               {generatedPlaylists.slice(0, 4).map((pl) => (
                 <button key={pl.id} onClick={() => openPlaylist(pl)} className="min-w-[150px] max-w-[150px] text-left group">
                   <div className="w-[150px] h-[150px] rounded-lg mb-2 flex items-center justify-center shadow-lg relative overflow-hidden" style={{ backgroundColor: pl.color }}>
-                    {pl.songs[0]?.cover_url ? <img src={pl.songs[0].cover_url} alt="" className="w-full h-full object-cover" /> : <Music className="w-12 h-12 text-white/40" />}
+                    {getPlaylistImage(generatedPlaylists.indexOf(pl)) ? <img src={getPlaylistImage(generatedPlaylists.indexOf(pl))!} alt="" className="w-full h-full object-cover opacity-80" /> : pl.songs[0]?.cover_url ? <img src={pl.songs[0].cover_url} alt="" className="w-full h-full object-cover" /> : <Music className="w-12 h-12 text-white/40" />}
                     <div className="absolute bottom-2 right-2 w-10 h-10 rounded-full bg-[#1db954] flex items-center justify-center shadow-xl opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all">
                       <Play className="w-5 h-5 text-black ml-0.5" />
                     </div>
@@ -218,8 +224,8 @@ export default function SpotifyApp({ profile }: Props) {
             <div className="flex gap-4 overflow-x-auto pb-2">
               {generatedPlaylists.slice(1, 5).map((pl) => (
                 <button key={pl.id} onClick={() => openPlaylist(pl)} className="min-w-[150px] max-w-[150px] text-left group">
-                  <div className="w-[150px] h-[150px] rounded-lg mb-2 flex items-center justify-center shadow-lg" style={{ backgroundColor: pl.color }}>
-                    <Music className="w-12 h-12 text-white/30" />
+                  <div className="w-[150px] h-[150px] rounded-lg mb-2 flex items-center justify-center shadow-lg overflow-hidden" style={{ backgroundColor: pl.color }}>
+                    {getPlaylistImage(generatedPlaylists.indexOf(pl) + 1) ? <img src={getPlaylistImage(generatedPlaylists.indexOf(pl) + 1)!} alt="" className="w-full h-full object-cover opacity-70" /> : <Music className="w-12 h-12 text-white/30" />}
                   </div>
                   <p className="text-sm font-bold truncate">{pl.name}</p>
                   <p className="text-xs text-[#b3b3b3] truncate">{pl.description}</p>
@@ -322,8 +328,8 @@ export default function SpotifyApp({ profile }: Props) {
             <h3 className="text-sm font-bold text-[#b3b3b3] mb-3">Playlists</h3>
             {generatedPlaylists.map((pl) => (
               <button key={pl.id} onClick={() => openPlaylist(pl)} className="flex items-center gap-3 py-3 w-full text-left hover:bg-[#ffffff10] rounded px-2">
-                <div className="w-12 h-12 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: pl.color }}>
-                  <Music className="w-5 h-5 text-white/50" />
+                <div className="w-12 h-12 rounded flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ backgroundColor: pl.color }}>
+                  {getPlaylistImage(generatedPlaylists.indexOf(pl)) ? <img src={getPlaylistImage(generatedPlaylists.indexOf(pl))!} alt="" className="w-full h-full object-cover" /> : <Music className="w-5 h-5 text-white/50" />}
                 </div>
                 <div>
                   <p className="text-sm font-medium">{pl.name}</p>
