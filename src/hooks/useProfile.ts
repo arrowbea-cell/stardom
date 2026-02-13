@@ -18,6 +18,12 @@ export interface Profile {
   x_followers: number;
   created_at: string;
   updated_at: string;
+  genre?: string;
+  age?: number;
+  has_home_studio?: boolean;
+  home_studio_level?: number;
+  artist_pick?: string;
+  vault_songs?: string[];
 }
 
 export function useProfile() {
