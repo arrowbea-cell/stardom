@@ -23,11 +23,22 @@ export default function ProfileTab({ profile }: Props) {
     const file = e.target.files?.[0];
     if (!file || !user) return;
     
+    toast.loading('Uploading avatar...');
     const url = await uploadArtistImage(file, user.id);
     if (url) {
-      await supabase.from('profiles').update({ avatar_url: url }).eq('user_id', user.id);
-      toast.success('Avatar updated!');
+      const { error } = await supabase.from('profiles').update({ avatar_url: url }).eq('user_id', user.id);
+      toast.dismiss();
+      if (!error) {
+        toast.success('Avatar updated!');
+      } else {
+        toast.error('Failed to update avatar');
+      }
+    } else {
+      toast.dismiss();
+      toast.error('Upload failed');
     }
+    // Reset input so same file can be re-selected
+    if (fileRef.current) fileRef.current.value = '';
   };
 
   const handleSaveBio = async () => {

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { getTimeUntilNextTurn } from '@/lib/supabase-helpers';
 
 export interface GameState {
   id: string;
@@ -40,10 +39,31 @@ export function useGameState() {
 
   useEffect(() => {
     if (!gameState) return;
+
+    // Calculate immediately
+    const calcTime = () => {
+      const started = new Date(gameState.turn_started_at).getTime();
+      const duration = gameState.turn_duration_minutes * 60 * 1000;
+      const nextTurn = started + duration;
+      return Math.max(0, nextTurn - Date.now());
+    };
+
+    setTimeLeft(calcTime());
     
-    const interval = setInterval(async () => {
-      const ms = await getTimeUntilNextTurn(gameState.turn_started_at, gameState.turn_duration_minutes);
+    const interval = setInterval(() => {
+      const ms = calcTime();
       setTimeLeft(ms);
+      
+      // If turn is over, try to trigger processing
+      if (ms === 0) {
+        fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-turn`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+        }).catch(() => {});
+      }
     }, 1000);
 
     return () => clearInterval(interval);
