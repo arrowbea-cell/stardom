@@ -1,1 +1,4 @@
 project_id = "rlgdnimylopacrzijnux"
+
+[functions.process-turn]
+verify_jwt = false
