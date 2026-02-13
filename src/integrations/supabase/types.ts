@@ -198,6 +198,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          age: number | null
           apple_music_listeners: number
           artist_name: string
           artist_pick: string | null
@@ -205,6 +206,9 @@ export type Database = {
           bio: string | null
           created_at: string
           current_money: number
+          genre: string | null
+          has_home_studio: boolean | null
+          home_studio_level: number | null
           id: string
           monthly_listeners: number
           spotify_followers: number
@@ -212,10 +216,12 @@ export type Database = {
           total_streams: number
           updated_at: string
           user_id: string
+          vault_songs: string[] | null
           x_followers: number
           youtube_subscribers: number
         }
         Insert: {
+          age?: number | null
           apple_music_listeners?: number
           artist_name: string
           artist_pick?: string | null
@@ -223,6 +229,9 @@ export type Database = {
           bio?: string | null
           created_at?: string
           current_money?: number
+          genre?: string | null
+          has_home_studio?: boolean | null
+          home_studio_level?: number | null
           id?: string
           monthly_listeners?: number
           spotify_followers?: number
@@ -230,10 +239,12 @@ export type Database = {
           total_streams?: number
           updated_at?: string
           user_id: string
+          vault_songs?: string[] | null
           x_followers?: number
           youtube_subscribers?: number
         }
         Update: {
+          age?: number | null
           apple_music_listeners?: number
           artist_name?: string
           artist_pick?: string | null
@@ -241,6 +252,9 @@ export type Database = {
           bio?: string | null
           created_at?: string
           current_money?: number
+          genre?: string | null
+          has_home_studio?: boolean | null
+          home_studio_level?: number | null
           id?: string
           monthly_listeners?: number
           spotify_followers?: number
@@ -248,10 +262,59 @@ export type Database = {
           total_streams?: number
           updated_at?: string
           user_id?: string
+          vault_songs?: string[] | null
           x_followers?: number
           youtube_subscribers?: number
         }
         Relationships: []
+      }
+      promotions: {
+        Row: {
+          active: boolean | null
+          artist_id: string
+          boost_multiplier: number
+          cost: number
+          created_at: string
+          id: string
+          promotion_type: string
+          song_id: string
+        }
+        Insert: {
+          active?: boolean | null
+          artist_id: string
+          boost_multiplier?: number
+          cost?: number
+          created_at?: string
+          id?: string
+          promotion_type?: string
+          song_id: string
+        }
+        Update: {
+          active?: boolean | null
+          artist_id?: string
+          boost_multiplier?: number
+          cost?: number
+          created_at?: string
+          id?: string
+          promotion_type?: string
+          song_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotions_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotions_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       songs: {
         Row: {
@@ -335,6 +398,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      studios: {
+        Row: {
+          cost_per_session: number
+          description: string | null
+          id: string
+          image_emoji: string | null
+          name: string
+          quality_level: number
+        }
+        Insert: {
+          cost_per_session?: number
+          description?: string | null
+          id?: string
+          image_emoji?: string | null
+          name: string
+          quality_level?: number
+        }
+        Update: {
+          cost_per_session?: number
+          description?: string | null
+          id?: string
+          image_emoji?: string | null
+          name?: string
+          quality_level?: number
+        }
+        Relationships: []
       }
     }
     Views: {

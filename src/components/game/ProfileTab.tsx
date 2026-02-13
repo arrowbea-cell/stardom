@@ -45,6 +45,9 @@ export default function ProfileTab({ profile }: Props) {
     { label: 'X Followers', value: formatNumber(profile.x_followers), icon: Users, color: 'text-foreground' },
   ];
 
+  const genre = (profile as any).genre || 'Pop';
+  const age = (profile as any).age || 21;
+
   return (
     <div className="p-4 space-y-6">
       {/* Avatar + name */}
@@ -65,6 +68,7 @@ export default function ProfileTab({ profile }: Props) {
         </button>
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
         <h2 className="font-display text-2xl font-bold">{profile.artist_name}</h2>
+        <p className="text-muted-foreground text-sm">{genre} • Age {age}</p>
       </div>
 
       {/* Bio */}
