@@ -58,9 +58,9 @@ export default function Auth() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
             <Disc3 className="w-10 h-10 text-primary animate-spin" style={{ animationDuration: '3s' }} />
-            <h1 className="text-3xl font-display font-bold gradient-text">HITFACTORY</h1>
+            <h1 className="text-3xl font-display font-bold gradient-text">STARDOM</h1>
           </div>
-          <p className="text-muted-foreground text-sm">The Music Industry Simulator</p>
+          <p className="text-muted-foreground text-sm">Rise to Stardom</p>
         </div>
 
         {/* OAuth buttons */}
