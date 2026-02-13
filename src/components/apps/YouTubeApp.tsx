@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Profile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { formatNumber } from '@/lib/supabase-helpers';
-import { Home, Search, PlaySquare, Bell, User, Music, ThumbsUp, ThumbsDown, Share2 } from 'lucide-react';
+import { Home, Search, PlaySquare, Bell, User, Music, ThumbsUp, ThumbsDown, Share2, Play } from 'lucide-react';
 
 interface Props {
   profile: Profile;
@@ -14,11 +14,17 @@ export default function YouTubeApp({ profile }: Props) {
   const [section, setSection] = useState<Section>('home');
   const [allArtists, setAllArtists] = useState<Profile[]>([]);
   const [viewingArtist, setViewingArtist] = useState<Profile>(profile);
+  const [songs, setSongs] = useState<any[]>([]);
 
   useEffect(() => {
     supabase.from('profiles').select('*').order('youtube_subscribers', { ascending: false }).limit(20)
       .then(({ data }) => { if (data) setAllArtists(data as Profile[]); });
   }, []);
+
+  useEffect(() => {
+    supabase.from('songs').select('*').eq('artist_id', viewingArtist.id).order('streams', { ascending: false })
+      .then(({ data }) => { if (data) setSongs(data); });
+  }, [viewingArtist.id]);
 
   const openChannel = (a: Profile) => { setViewingArtist(a); setSection('channel'); };
 
@@ -42,23 +48,57 @@ export default function YouTubeApp({ profile }: Props) {
         <div className="pb-20">
           {/* Category chips */}
           <div className="flex gap-2 px-4 py-3 overflow-x-auto">
-            {['All', 'Music', 'Live', 'Gaming', 'News'].map((c) => (
+            {['All', 'Music', 'Live', 'Gaming', 'Mixes', 'Podcasts'].map((c) => (
               <div key={c} className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap ${
                 c === 'Music' ? 'bg-white text-black' : 'bg-[#272727] text-[#f1f1f1]'
               }`}>{c}</div>
             ))}
           </div>
 
-          {/* Artist channels as "videos" */}
+          {/* Shorts row */}
+          <div className="px-4 mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="bg-[#ff0000] rounded px-1.5 py-0.5">
+                <span className="text-[10px] font-bold">Shorts</span>
+              </div>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {allArtists.slice(0, 5).map((artist) => (
+                <button key={artist.id} onClick={() => openChannel(artist)} className="min-w-[110px]">
+                  <div className="w-[110px] h-[196px] rounded-xl bg-[#272727] overflow-hidden relative">
+                    {artist.avatar_url ? (
+                      <img src={artist.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Music className="w-8 h-8 text-[#555]" />
+                      </div>
+                    )}
+                    <div className="absolute bottom-2 left-2 right-2">
+                      <p className="text-[10px] font-medium leading-tight line-clamp-2">{artist.artist_name} - Music Short</p>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Video feed */}
           <div className="space-y-6 px-4 pt-2">
             {allArtists.map((artist) => (
               <button key={artist.id} onClick={() => openChannel(artist)} className="w-full text-left">
-                <div className="w-full aspect-video bg-[#272727] rounded-xl flex items-center justify-center mb-3">
+                <div className="w-full aspect-video bg-[#272727] rounded-xl flex items-center justify-center mb-3 relative overflow-hidden">
                   {artist.avatar_url ? (
                     <img src={artist.avatar_url} alt="" className="w-full h-full object-cover rounded-xl" />
                   ) : (
                     <Music className="w-12 h-12 text-[#555]" />
                   )}
+                  {/* Duration badge */}
+                  <div className="absolute bottom-2 right-2 bg-black/80 rounded px-1.5 py-0.5">
+                    <span className="text-[10px] font-medium">3:45</span>
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/20">
+                    <Play className="w-12 h-12 text-white" />
+                  </div>
                 </div>
                 <div className="flex gap-3">
                   <div className="w-9 h-9 rounded-full bg-[#272727] overflow-hidden flex-shrink-0">
@@ -71,8 +111,8 @@ export default function YouTubeApp({ profile }: Props) {
                     )}
                   </div>
                   <div>
-                    <p className="text-sm font-medium leading-tight">{artist.artist_name} - Official Channel</p>
-                    <p className="text-xs text-[#aaa] mt-0.5">{artist.artist_name} • {formatNumber(artist.youtube_subscribers)} subscribers</p>
+                    <p className="text-sm font-medium leading-tight">{artist.artist_name} - Official Music Video</p>
+                    <p className="text-xs text-[#aaa] mt-0.5">{artist.artist_name} • {formatNumber(artist.total_streams)} views • 1 day ago</p>
                   </div>
                 </div>
               </button>
@@ -100,24 +140,52 @@ export default function YouTubeApp({ profile }: Props) {
             </div>
             <div className="flex-1">
               <h2 className="font-bold text-lg">{viewingArtist.artist_name}</h2>
-              <p className="text-xs text-[#aaa]">{formatNumber(viewingArtist.youtube_subscribers)} subscribers</p>
+              <p className="text-xs text-[#aaa]">@{viewingArtist.artist_name.toLowerCase().replace(/\s/g, '')} • {formatNumber(viewingArtist.youtube_subscribers)} subscribers</p>
+              <p className="text-xs text-[#aaa] mt-0.5">{viewingArtist.bio?.slice(0, 60) || 'Music artist'}</p>
             </div>
-            <button className="bg-[#ff0000] text-white text-sm font-medium px-4 py-2 rounded-full">
+          </div>
+
+          <div className="px-4 mb-4">
+            <button className="bg-[#ff0000] text-white text-sm font-medium px-6 py-2.5 rounded-full w-full">
               Subscribe
             </button>
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b border-[#272727] px-4">
-            {['Videos', 'Shorts', 'Community', 'About'].map((t, i) => (
-              <button key={t} className={`py-3 px-4 text-sm font-medium ${i === 0 ? 'text-white border-b-2 border-white' : 'text-[#aaa]'}`}>
+          <div className="flex border-b border-[#272727] px-4 overflow-x-auto">
+            {['Home', 'Videos', 'Shorts', 'Community', 'About'].map((t, i) => (
+              <button key={t} className={`py-3 px-4 text-sm font-medium whitespace-nowrap ${i === 0 ? 'text-white border-b-2 border-white' : 'text-[#aaa]'}`}>
                 {t}
               </button>
             ))}
           </div>
 
-          <div className="p-4 text-sm text-[#aaa]">
-            <p>{viewingArtist.bio || 'No content yet. Release music to fill your channel!'}</p>
+          {/* Channel videos */}
+          <div className="p-4 space-y-4">
+            <h3 className="text-base font-bold">Videos</h3>
+            {songs.length > 0 ? songs.map((song: any) => (
+              <div key={song.id} className="flex gap-3">
+                <div className="w-40 aspect-video bg-[#272727] rounded-lg overflow-hidden flex-shrink-0 relative">
+                  {song.cover_url ? (
+                    <img src={song.cover_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Music className="w-6 h-6 text-[#555]" />
+                    </div>
+                  )}
+                  <div className="absolute bottom-1 right-1 bg-black/80 rounded px-1 py-0.5">
+                    <span className="text-[9px]">3:30</span>
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium leading-tight line-clamp-2">{song.title} - Official Video</p>
+                  <p className="text-xs text-[#aaa] mt-1">{formatNumber(song.streams)} views</p>
+                  <p className="text-xs text-[#aaa]">2 days ago</p>
+                </div>
+              </div>
+            )) : (
+              <p className="text-sm text-[#aaa]">No videos uploaded yet</p>
+            )}
           </div>
         </div>
       )}
