@@ -105,6 +105,10 @@
     @apply text-muted-foreground hover:text-foreground transition-colors;
   }
 
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
   .chart-bar {
     @apply bg-gradient-to-r from-primary/80 to-primary rounded-r-md transition-all duration-700;
   }

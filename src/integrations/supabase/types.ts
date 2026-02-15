@@ -88,6 +88,84 @@ export type Database = {
           },
         ]
       }
+      artist_items: {
+        Row: {
+          artist_id: string
+          id: string
+          item_id: string
+          purchased_at: string
+        }
+        Insert: {
+          artist_id: string
+          id?: string
+          item_id: string
+          purchased_at?: string
+        }
+        Update: {
+          artist_id?: string
+          id?: string
+          item_id?: string
+          purchased_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artist_items_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "artist_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "lifestyle_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          note: string | null
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_transactions_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transactions_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       charts: {
         Row: {
           artist_id: string
@@ -136,6 +214,51 @@ export type Database = {
           },
         ]
       }
+      collaborations: {
+        Row: {
+          created_at: string
+          fee: number
+          id: string
+          receiver_id: string
+          sender_id: string
+          song_title: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          fee?: number
+          id?: string
+          receiver_id: string
+          sender_id: string
+          song_title: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          fee?: number
+          id?: string
+          receiver_id?: string
+          sender_id?: string
+          song_title?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaborations_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collaborations_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_state: {
         Row: {
           current_turn: number
@@ -154,6 +277,36 @@ export type Database = {
           id?: string
           turn_duration_minutes?: number
           turn_started_at?: string
+        }
+        Relationships: []
+      }
+      lifestyle_items: {
+        Row: {
+          brand: string
+          category: string
+          emoji: string
+          id: string
+          name: string
+          price: number
+          rarity: string
+        }
+        Insert: {
+          brand?: string
+          category: string
+          emoji?: string
+          id?: string
+          name: string
+          price: number
+          rarity?: string
+        }
+        Update: {
+          brand?: string
+          category?: string
+          emoji?: string
+          id?: string
+          name?: string
+          price?: number
+          rarity?: string
         }
         Relationships: []
       }
@@ -205,9 +358,11 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string
+          current_country: string | null
           current_money: number
           genre: string | null
           has_home_studio: boolean | null
+          home_country: string | null
           home_studio_level: number | null
           id: string
           monthly_listeners: number
@@ -228,9 +383,11 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          current_country?: string | null
           current_money?: number
           genre?: string | null
           has_home_studio?: boolean | null
+          home_country?: string | null
           home_studio_level?: number | null
           id?: string
           monthly_listeners?: number
@@ -251,9 +408,11 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          current_country?: string | null
           current_money?: number
           genre?: string | null
           has_home_studio?: boolean | null
+          home_country?: string | null
           home_studio_level?: number | null
           id?: string
           monthly_listeners?: number
@@ -428,6 +587,91 @@ export type Database = {
           quality_level?: number
         }
         Relationships: []
+      }
+      travels: {
+        Row: {
+          active: boolean
+          apartment_name: string
+          apartment_tier: string
+          artist_id: string
+          check_in: string
+          city: string
+          country: string
+          created_at: string
+          daily_rent: number
+          duration_days: number
+          id: string
+        }
+        Insert: {
+          active?: boolean
+          apartment_name: string
+          apartment_tier?: string
+          artist_id: string
+          check_in?: string
+          city: string
+          country: string
+          created_at?: string
+          daily_rent?: number
+          duration_days?: number
+          id?: string
+        }
+        Update: {
+          active?: boolean
+          apartment_name?: string
+          apartment_tier?: string
+          artist_id?: string
+          check_in?: string
+          city?: string
+          country?: string
+          created_at?: string
+          daily_rent?: number
+          duration_days?: number
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travels_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visas: {
+        Row: {
+          artist_id: string
+          cost: number
+          country: string
+          id: string
+          obtained_at: string
+          visa_type: string
+        }
+        Insert: {
+          artist_id: string
+          cost?: number
+          country: string
+          id?: string
+          obtained_at?: string
+          visa_type?: string
+        }
+        Update: {
+          artist_id?: string
+          cost?: number
+          country?: string
+          id?: string
+          obtained_at?: string
+          visa_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visas_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

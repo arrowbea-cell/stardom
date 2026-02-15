@@ -24,6 +24,8 @@ export interface Profile {
   home_studio_level?: number;
   artist_pick?: string;
   vault_songs?: string[];
+  current_country?: string;
+  home_country?: string;
 }
 
 export function useProfile() {
