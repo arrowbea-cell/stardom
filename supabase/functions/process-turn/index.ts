@@ -121,6 +121,9 @@ Deno.serve(async (req) => {
     }
 
     // Generate multiple chart types
+    // First, delete any existing charts for this turn to prevent duplicates
+    await supabase.from("charts").delete().eq("turn_number", newTurn);
+
     const { data: allSongs } = await supabase
       .from("songs")
       .select("id, artist_id, streams, radio_spins")
@@ -135,12 +138,12 @@ Deno.serve(async (req) => {
         chartInserts.push({ turn_number: newTurn, position: i + 1, song_id: s.id, artist_id: s.artist_id, streams: s.streams, chart_type: "top_songs" });
       });
 
-      // Hot 100 Daily (same as top songs but labeled differently for daily tracking)
+      // Hot 100 Daily
       allSongs.slice(0, 100).forEach((s, i) => {
         chartInserts.push({ turn_number: newTurn, position: i + 1, song_id: s.id, artist_id: s.artist_id, streams: s.streams, chart_type: "hot_100_daily" });
       });
 
-      // Hot 100 Weekly (accumulated over last 7 turns)
+      // Hot 100 Weekly
       allSongs.slice(0, 100).forEach((s, i) => {
         chartInserts.push({ turn_number: newTurn, position: i + 1, song_id: s.id, artist_id: s.artist_id, streams: s.streams, chart_type: "hot_100_weekly" });
       });
