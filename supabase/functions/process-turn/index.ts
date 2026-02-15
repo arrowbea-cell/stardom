@@ -37,160 +37,158 @@ Deno.serve(async (req) => {
     });
   }
 
-  const newTurn = gameState.current_turn + 1;
+  // Calculate how many turns were missed and catch up
+  const missedTurns = Math.floor((now - turnStart) / turnDuration);
+  const turnsToProcess = Math.min(missedTurns, 10); // cap at 10 to prevent overload
 
-  const { data: songs } = await supabase
-    .from("songs")
-    .select("id, artist_id, streams, release_turn, radio_spins");
+  let currentTurn = gameState.current_turn;
 
-  if (songs && songs.length > 0) {
-    for (const song of songs) {
-      const { data: promos } = await supabase
-        .from("promotions")
-        .select("boost_multiplier")
-        .eq("song_id", song.id)
-        .eq("active", true)
-        .limit(1);
+  for (let t = 0; t < turnsToProcess; t++) {
+    currentTurn += 1;
+    const newTurn = currentTurn;
 
-      const multiplier = promos && promos.length > 0 ? Number(promos[0].boost_multiplier) : 1;
-
-      // BOOSTED: base streams now 2,000 - 25,000 (was 100-5000)
-      const turnsOut = Math.max(1, newTurn - song.release_turn);
-      const decayFactor = Math.max(0.15, 1 - turnsOut * 0.03); // slower decay
-      const baseStreams = Math.floor((Math.random() * 23000 + 2000) * decayFactor * multiplier);
-
-      // Radio spins: 50-500 per turn, boosted by promotions
-      const radioSpins = Math.floor((Math.random() * 450 + 50) * decayFactor * multiplier);
-
-      // Distribute across platforms
-      const spotifyStreams = Math.floor(baseStreams * 0.55);
-      const appleStreams = Math.floor(baseStreams * 0.28);
-      const youtubeStreams = Math.floor(baseStreams * 0.17);
-
-      await supabase
-        .from("songs")
-        .update({
-          streams: song.streams + baseStreams,
-          radio_spins: (song.radio_spins || 0) + radioSpins,
-        })
-        .eq("id", song.id);
-
-      const platforms = [
-        { platform: "spotify", streams_gained: spotifyStreams },
-        { platform: "apple_music", streams_gained: appleStreams },
-        { platform: "youtube", streams_gained: youtubeStreams },
-      ];
-
-      for (const p of platforms) {
-        await supabase.from("stream_history").insert({
-          artist_id: song.artist_id,
-          song_id: song.id,
-          turn_number: newTurn,
-          platform: p.platform,
-          streams_gained: p.streams_gained,
-        });
-      }
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("total_streams, monthly_listeners, spotify_followers, apple_music_listeners, youtube_subscribers")
-        .eq("id", song.artist_id)
-        .single();
-
-      if (profile) {
-        const newFollowers = Math.floor(baseStreams * 0.02 * multiplier);
-        await supabase
-          .from("profiles")
-          .update({
-            total_streams: profile.total_streams + baseStreams,
-            monthly_listeners: profile.monthly_listeners + Math.floor(baseStreams * 0.4),
-            spotify_followers: profile.spotify_followers + Math.floor(newFollowers * 0.5),
-            apple_music_listeners: profile.apple_music_listeners + Math.floor(newFollowers * 0.3),
-            youtube_subscribers: profile.youtube_subscribers + Math.floor(newFollowers * 0.2),
-          })
-          .eq("id", song.artist_id);
-      }
-
-      if (promos && promos.length > 0) {
-        await supabase
-          .from("promotions")
-          .update({ active: false })
-          .eq("song_id", song.id)
-          .eq("active", true);
-      }
-    }
-
-    // Generate multiple chart types
-    // First, delete any existing charts for this turn to prevent duplicates
-    await supabase.from("charts").delete().eq("turn_number", newTurn);
-
-    const { data: allSongs } = await supabase
+    const { data: songs } = await supabase
       .from("songs")
-      .select("id, artist_id, streams, radio_spins")
-      .order("streams", { ascending: false })
-      .limit(100);
+      .select("id, artist_id, streams, release_turn, radio_spins");
 
-    if (allSongs) {
-      const chartInserts: any[] = [];
+    if (songs && songs.length > 0) {
+      for (const song of songs) {
+        const { data: promos } = await supabase
+          .from("promotions")
+          .select("boost_multiplier")
+          .eq("song_id", song.id)
+          .eq("active", true)
+          .limit(1);
 
-      // Top Songs (overall)
-      allSongs.slice(0, 50).forEach((s, i) => {
-        chartInserts.push({ turn_number: newTurn, position: i + 1, song_id: s.id, artist_id: s.artist_id, streams: s.streams, chart_type: "top_songs" });
-      });
+        const multiplier = promos && promos.length > 0 ? Number(promos[0].boost_multiplier) : 1;
 
-      // Hot 100 Daily
-      allSongs.slice(0, 100).forEach((s, i) => {
-        chartInserts.push({ turn_number: newTurn, position: i + 1, song_id: s.id, artist_id: s.artist_id, streams: s.streams, chart_type: "hot_100_daily" });
-      });
+        const turnsOut = Math.max(1, newTurn - song.release_turn);
+        const decayFactor = Math.max(0.15, 1 - turnsOut * 0.03);
+        const baseStreams = Math.floor((Math.random() * 23000 + 2000) * decayFactor * multiplier);
+        const radioSpins = Math.floor((Math.random() * 450 + 50) * decayFactor * multiplier);
 
-      // Hot 100 Weekly
-      allSongs.slice(0, 100).forEach((s, i) => {
-        chartInserts.push({ turn_number: newTurn, position: i + 1, song_id: s.id, artist_id: s.artist_id, streams: s.streams, chart_type: "hot_100_weekly" });
-      });
+        const spotifyStreams = Math.floor(baseStreams * 0.55);
+        const appleStreams = Math.floor(baseStreams * 0.28);
+        const youtubeStreams = Math.floor(baseStreams * 0.17);
 
-      // Daily Radio (sorted by radio_spins)
-      const byRadio = [...allSongs].sort((a, b) => (b.radio_spins || 0) - (a.radio_spins || 0));
-      byRadio.slice(0, 50).forEach((s, i) => {
-        chartInserts.push({ turn_number: newTurn, position: i + 1, song_id: s.id, artist_id: s.artist_id, streams: s.radio_spins || 0, chart_type: "daily_radio" });
-      });
+        await supabase
+          .from("songs")
+          .update({
+            streams: song.streams + baseStreams,
+            radio_spins: (song.radio_spins || 0) + radioSpins,
+          })
+          .eq("id", song.id);
 
-      // Weekly Radio
-      byRadio.slice(0, 50).forEach((s, i) => {
-        chartInserts.push({ turn_number: newTurn, position: i + 1, song_id: s.id, artist_id: s.artist_id, streams: s.radio_spins || 0, chart_type: "weekly_radio" });
-      });
+        const platforms = [
+          { platform: "spotify", streams_gained: spotifyStreams },
+          { platform: "apple_music", streams_gained: appleStreams },
+          { platform: "youtube", streams_gained: youtubeStreams },
+        ];
 
-      // Batch insert all charts
-      await supabase.from("charts").insert(chartInserts);
-    }
+        for (const p of platforms) {
+          await supabase.from("stream_history").insert({
+            artist_id: song.artist_id,
+            song_id: song.id,
+            turn_number: newTurn,
+            platform: p.platform,
+            streams_gained: p.streams_gained,
+          });
+        }
 
-    // Monthly Listeners chart (artist-level)
-    const { data: allArtists } = await supabase
-      .from("profiles")
-      .select("id, monthly_listeners")
-      .order("monthly_listeners", { ascending: false })
-      .limit(50);
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("total_streams, monthly_listeners, spotify_followers, apple_music_listeners, youtube_subscribers")
+          .eq("id", song.artist_id)
+          .single();
 
-    if (allArtists) {
-      const artistCharts = allArtists.map((a, i) => ({
-        turn_number: newTurn,
-        position: i + 1,
-        artist_id: a.id,
-        streams: a.monthly_listeners,
-        chart_type: "monthly_listeners",
-      }));
-      await supabase.from("charts").insert(artistCharts);
+        if (profile) {
+          const newFollowers = Math.floor(baseStreams * 0.02 * multiplier);
+          await supabase
+            .from("profiles")
+            .update({
+              total_streams: profile.total_streams + baseStreams,
+              monthly_listeners: profile.monthly_listeners + Math.floor(baseStreams * 0.4),
+              spotify_followers: profile.spotify_followers + Math.floor(newFollowers * 0.5),
+              apple_music_listeners: profile.apple_music_listeners + Math.floor(newFollowers * 0.3),
+              youtube_subscribers: profile.youtube_subscribers + Math.floor(newFollowers * 0.2),
+            })
+            .eq("id", song.artist_id);
+        }
+
+        if (promos && promos.length > 0) {
+          await supabase
+            .from("promotions")
+            .update({ active: false })
+            .eq("song_id", song.id)
+            .eq("active", true);
+        }
+      }
+
+      // Generate charts - delete existing for this turn first
+      await supabase.from("charts").delete().eq("turn_number", newTurn);
+
+      const { data: allSongs } = await supabase
+        .from("songs")
+        .select("id, artist_id, streams, radio_spins")
+        .order("streams", { ascending: false })
+        .limit(100);
+
+      if (allSongs) {
+        const chartInserts: any[] = [];
+
+        allSongs.slice(0, 50).forEach((s, i) => {
+          chartInserts.push({ turn_number: newTurn, position: i + 1, song_id: s.id, artist_id: s.artist_id, streams: s.streams, chart_type: "top_songs" });
+        });
+
+        allSongs.slice(0, 100).forEach((s, i) => {
+          chartInserts.push({ turn_number: newTurn, position: i + 1, song_id: s.id, artist_id: s.artist_id, streams: s.streams, chart_type: "hot_100_daily" });
+        });
+
+        allSongs.slice(0, 100).forEach((s, i) => {
+          chartInserts.push({ turn_number: newTurn, position: i + 1, song_id: s.id, artist_id: s.artist_id, streams: s.streams, chart_type: "hot_100_weekly" });
+        });
+
+        const byRadio = [...allSongs].sort((a, b) => (b.radio_spins || 0) - (a.radio_spins || 0));
+        byRadio.slice(0, 50).forEach((s, i) => {
+          chartInserts.push({ turn_number: newTurn, position: i + 1, song_id: s.id, artist_id: s.artist_id, streams: s.radio_spins || 0, chart_type: "daily_radio" });
+        });
+
+        byRadio.slice(0, 50).forEach((s, i) => {
+          chartInserts.push({ turn_number: newTurn, position: i + 1, song_id: s.id, artist_id: s.artist_id, streams: s.radio_spins || 0, chart_type: "weekly_radio" });
+        });
+
+        await supabase.from("charts").insert(chartInserts);
+      }
+
+      const { data: allArtists } = await supabase
+        .from("profiles")
+        .select("id, monthly_listeners")
+        .order("monthly_listeners", { ascending: false })
+        .limit(50);
+
+      if (allArtists) {
+        const artistCharts = allArtists.map((a, i) => ({
+          turn_number: newTurn,
+          position: i + 1,
+          artist_id: a.id,
+          streams: a.monthly_listeners,
+          chart_type: "monthly_listeners",
+        }));
+        await supabase.from("charts").insert(artistCharts);
+      }
     }
   }
 
+  // Set new turn time to NOW (not the calculated future time) so the next hour starts fresh
   await supabase
     .from("game_state")
     .update({
-      current_turn: newTurn,
+      current_turn: currentTurn,
       turn_started_at: new Date().toISOString(),
     })
     .eq("id", gameState.id);
 
-  return new Response(JSON.stringify({ message: "Turn processed", new_turn: newTurn }), {
+  return new Response(JSON.stringify({ message: "Turn processed", new_turn: currentTurn, turns_processed: turnsToProcess }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });
