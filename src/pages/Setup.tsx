@@ -15,7 +15,7 @@ const GENRES = ['Pop', 'Hip-Hop', 'R&B', 'Rock', 'Latin', 'EDM', 'Indie', 'K-Pop
 const AGE_OPTIONS = [16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 35, 40];
 
 export default function Setup() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -29,10 +29,25 @@ export default function Setup() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/', { replace: true });
+      return;
+    }
     if (!profileLoading && profile) {
       navigate('/dashboard', { replace: true });
     }
-  }, [profile, profileLoading, navigate]);
+  }, [profile, profileLoading, user, authLoading, navigate]);
+
+  // Show loading while checking auth/profile
+  if (authLoading || profileLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Disc3 className="w-12 h-12 text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user || profile) return null;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
