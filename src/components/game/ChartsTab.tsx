@@ -31,11 +31,22 @@ export default function ChartsTab() {
 
   useEffect(() => {
     const fetchChartData = async () => {
-      // Get the latest turn's chart data for selected type
+      // First get the latest turn number for this chart type
+      const { data: latestEntry } = await supabase
+        .from('charts')
+        .select('turn_number')
+        .eq('chart_type', chartType)
+        .order('turn_number', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!latestEntry) { setChartData([]); return; }
+
       const { data } = await supabase
         .from('charts')
         .select('*, profiles!charts_artist_id_fkey(artist_name, avatar_url), songs!charts_song_id_fkey(title, cover_url)')
         .eq('chart_type', chartType)
+        .eq('turn_number', latestEntry.turn_number)
         .order('position', { ascending: true })
         .limit(50);
       if (data) setChartData(data);

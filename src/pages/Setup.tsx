@@ -62,6 +62,11 @@ export default function Setup() {
     });
 
     if (error) {
+      // If profile already exists (duplicate user_id), just redirect
+      if (error.code === '23505') {
+        navigate('/dashboard', { replace: true });
+        return;
+      }
       toast.error(error.message);
     } else {
       toast.success('Welcome to the industry!');
