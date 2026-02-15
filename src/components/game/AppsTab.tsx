@@ -53,7 +53,7 @@ export default function AppsTab({ profile }: Props) {
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 25 }}
-          className="min-h-full"
+          className="min-h-full pb-24"
         >
           <button
             onClick={() => setOpenApp(null)}
