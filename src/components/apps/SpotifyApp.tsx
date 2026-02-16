@@ -608,7 +608,7 @@ export default function SpotifyApp({ profile }: Props) {
 
       {/* ── NOW PLAYING BAR ── */}
       {currentlyPlaying && section !== 'now-playing' && (
-        <div className="fixed bottom-[52px] left-0 right-0 z-40">
+        <div className="sticky bottom-[52px] z-30">
           <button onClick={() => navigate('now-playing')} className="w-full bg-[#382818] mx-2 rounded-md p-2 flex items-center gap-2" style={{ width: 'calc(100% - 16px)' }}>
             <div className="w-10 h-10 bg-[#282828] rounded overflow-hidden flex-shrink-0">
               {currentlyPlaying.cover_url ? <img src={currentlyPlaying.cover_url} alt="" className="w-full h-full object-cover" /> : <Music className="w-4 h-4 text-[#b3b3b3] m-3" />}
@@ -632,7 +632,7 @@ export default function SpotifyApp({ profile }: Props) {
 
       {/* ── BOTTOM NAV ── */}
       {section !== 'now-playing' && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#121212] via-[#121212] to-[#12121200] pt-2 pb-2 z-50">
+        <div className="sticky bottom-0 bg-gradient-to-t from-[#121212] via-[#121212] to-[#12121200] pt-2 pb-2 z-30">
           <div className="flex justify-around py-1 px-4">
             <button onClick={() => setSection('home')} className={`flex flex-col items-center gap-0.5 ${section === 'home' ? 'text-white' : 'text-[#b3b3b3]'}`}>
               <Home className={`w-6 h-6 ${section === 'home' ? 'fill-white' : ''}`} />

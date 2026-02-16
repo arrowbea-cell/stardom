@@ -226,7 +226,7 @@ export default function XApp({ profile }: Props) {
           </div>
 
           {/* Reply input */}
-          <div className="fixed bottom-[52px] left-0 right-0 bg-[#000] border-t border-[#2f3336] p-3 z-40">
+          <div className="sticky bottom-[48px] bg-[#000] border-t border-[#2f3336] p-3 z-30">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-[#16181c] overflow-hidden flex-shrink-0">
                 {profile.avatar_url ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" /> : <User className="w-3 h-3 text-[#71767b] m-2.5" />}
@@ -455,7 +455,7 @@ export default function XApp({ profile }: Props) {
       )}
 
       {/* Bottom nav */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#000] border-t border-[#2f3336] flex justify-around py-3 z-50">
+      <div className="sticky bottom-0 bg-[#000] border-t border-[#2f3336] flex justify-around py-3 z-30">
         <button onClick={() => setSection('feed')} className={section === 'feed' ? 'text-white' : 'text-[#71767b]'}>
           <Home className={`w-6 h-6 ${section === 'feed' ? 'fill-white' : ''}`} />
         </button>

@@ -233,7 +233,7 @@ export default function YouTubeApp({ profile }: Props) {
       )}
 
       {/* Bottom nav */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#0f0f0f] border-t border-[#272727] flex justify-around py-2 z-50">
+      <div className="sticky bottom-0 bg-[#0f0f0f] border-t border-[#272727] flex justify-around py-2 z-30">
         <button onClick={() => setSection('home')} className={`flex flex-col items-center gap-0.5 ${section === 'home' ? 'text-white' : 'text-[#aaa]'}`}>
           <Home className="w-5 h-5" />
           <span className="text-[10px]">Home</span>
