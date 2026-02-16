@@ -80,15 +80,15 @@ export default function AppsTab({ profile }: Props) {
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 25 }}
-          className="min-h-full"
+          className="flex flex-col h-[calc(100vh-44px)]"
         >
           <button
             onClick={() => setOpenApp(null)}
-            className="flex items-center gap-1 p-3 text-sm text-muted-foreground hover:text-foreground sticky top-0 z-50 bg-background/80 backdrop-blur-md w-full"
+            className="flex items-center gap-1 p-3 text-sm text-muted-foreground hover:text-foreground bg-background/80 backdrop-blur-md w-full flex-shrink-0 z-50"
           >
             <ChevronLeft className="w-4 h-4" /> Back
           </button>
-          <div className="pb-4">
+          <div className="flex-1 min-h-0">
             {openApp === 'spotify' && <SpotifyApp profile={profile} />}
             {openApp === 'apple-music' && <AppleMusicApp profile={profile} />}
             {openApp === 'youtube' && <YouTubeApp profile={profile} />}

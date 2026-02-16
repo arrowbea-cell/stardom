@@ -69,7 +69,7 @@ export default function YouTubeMusicApp({ profile }: Props) {
   const chartArtists = chartType === 'top_artists' ? [...allArtists].sort((a, b) => b.youtube_subscribers - a.youtube_subscribers) : [];
 
   return (
-    <div className="flex flex-col h-[calc(100vh-44px)] bg-[#030303] text-white">
+    <div className="flex flex-col h-full bg-[#030303] text-white">
       
       <div className="flex-1 overflow-y-auto">
       {/* HOME */}

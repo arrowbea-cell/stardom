@@ -176,7 +176,7 @@ export default function XApp({ profile }: Props) {
   );
 
   return (
-    <div className="flex flex-col h-[calc(100vh-44px)] bg-[#000] text-[#e7e9ea]">
+    <div className="flex flex-col h-full bg-[#000] text-[#e7e9ea]">
       <div className="flex-1 overflow-y-auto">
       {/* THREAD VIEW */}
       {section === 'thread' && threadArtist && (

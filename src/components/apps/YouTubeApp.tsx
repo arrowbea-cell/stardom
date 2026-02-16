@@ -117,7 +117,7 @@ export default function YouTubeApp({ profile }: Props) {
   const totalViews = videos.reduce((sum, v) => sum + v.views, 0);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-44px)] bg-[#0f0f0f] text-[#fff]">
+    <div className="flex flex-col h-full bg-[#0f0f0f] text-[#fff]">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-[#0f0f0f] border-b border-[#272727]">
         <div className="flex items-center gap-1">

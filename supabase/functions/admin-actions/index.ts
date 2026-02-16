@@ -46,6 +46,7 @@ Deno.serve(async (req) => {
         await supabase.from("merch_items").delete().eq("artist_id", artist_id);
         await supabase.from("fan_mail").delete().eq("artist_id", artist_id);
         await supabase.from("awards").delete().eq("artist_id", artist_id);
+        await supabase.from("pitchfork_reviews").delete().eq("artist_id", artist_id);
         await supabase.from("concerts").delete().eq("artist_id", artist_id);
         await supabase.from("record_deals").delete().eq("artist_id", artist_id);
         await supabase.from("beefs").delete().or(`initiator_id.eq.${artist_id},target_id.eq.${artist_id}`);
@@ -175,6 +176,103 @@ Deno.serve(async (req) => {
 
       case "test": {
         return new Response(JSON.stringify({ success: true, message: "Authenticated" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      case "set_turn_duration": {
+        const minutes = amount || 60;
+        await supabase.from("game_state").update({ turn_duration_minutes: minutes }).neq("id", "");
+        return new Response(JSON.stringify({ success: true, message: `Turn duration set to ${minutes} minutes` }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      case "reset_timer": {
+        await supabase.from("game_state").update({ turn_started_at: new Date().toISOString() }).neq("id", "");
+        return new Response(JSON.stringify({ success: true, message: "Timer reset to now" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      case "force_next_turn": {
+        const { data: gs } = await supabase.from("game_state").select("*").limit(1).single();
+        if (gs) {
+          await supabase.from("game_state").update({
+            current_turn: gs.current_turn + 1,
+            turn_started_at: new Date().toISOString(),
+          }).eq("id", gs.id);
+        }
+        return new Response(JSON.stringify({ success: true, message: "Skipped to next turn" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      case "give_money": {
+        const cash = amount || 100000;
+        const { data: profile } = await supabase.from("profiles").select("current_money").eq("id", artist_id).single();
+        if (profile) {
+          await supabase.from("profiles").update({ current_money: profile.current_money + cash }).eq("id", artist_id);
+        }
+        return new Response(JSON.stringify({ success: true, message: `Gave $${cash} to artist` }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      case "set_followers": {
+        const { platform, count } = body;
+        const updateObj: Record<string, number> = {};
+        if (platform === "spotify") updateObj.spotify_followers = count;
+        else if (platform === "apple") updateObj.apple_music_listeners = count;
+        else if (platform === "youtube") updateObj.youtube_subscribers = count;
+        else if (platform === "x") updateObj.x_followers = count;
+        else if (platform === "monthly") updateObj.monthly_listeners = count;
+        await supabase.from("profiles").update(updateObj).eq("id", artist_id);
+        return new Response(JSON.stringify({ success: true, message: `Set ${platform} to ${count}` }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      case "give_money_all": {
+        const cash = amount || 10000;
+        const { data: allProfiles } = await supabase.from("profiles").select("id, current_money");
+        if (allProfiles) {
+          for (const p of allProfiles) {
+            await supabase.from("profiles").update({ current_money: p.current_money + cash }).eq("id", p.id);
+          }
+        }
+        return new Response(JSON.stringify({ success: true, message: `Gave $${cash} to all artists` }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      case "reset_economy": {
+        const { data: allProfiles } = await supabase.from("profiles").select("id, starting_money");
+        if (allProfiles) {
+          for (const p of allProfiles) {
+            await supabase.from("profiles").update({ current_money: p.starting_money }).eq("id", p.id);
+          }
+        }
+        return new Response(JSON.stringify({ success: true, message: "Economy reset to starting money" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      case "boost_all_streams": {
+        const boost = amount || 50000;
+        const { data: allSongs } = await supabase.from("songs").select("id, streams, artist_id");
+        if (allSongs) {
+          for (const s of allSongs) {
+            await supabase.from("songs").update({ streams: s.streams + boost }).eq("id", s.id);
+          }
+          const artistMap: Record<string, number> = {};
+          for (const s of allSongs) { artistMap[s.artist_id] = (artistMap[s.artist_id] || 0) + boost; }
+          for (const [aid, total] of Object.entries(artistMap)) {
+            const { data: p } = await supabase.from("profiles").select("total_streams").eq("id", aid).single();
+            if (p) await supabase.from("profiles").update({ total_streams: p.total_streams + total }).eq("id", aid);
+          }
+        }
+        return new Response(JSON.stringify({ success: true, message: `Boosted all songs by ${boost}` }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }

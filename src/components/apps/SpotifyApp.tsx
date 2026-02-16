@@ -210,7 +210,7 @@ export default function SpotifyApp({ profile }: Props) {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-44px)] bg-[#121212] text-white">
+    <div className="flex flex-col h-full bg-[#121212] text-white">
       
       <div className="flex-1 overflow-y-auto">
       {/* ── HOME ── */}

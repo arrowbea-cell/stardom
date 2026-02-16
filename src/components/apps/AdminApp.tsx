@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/hooks/useProfile';
 import { useGameState } from '@/hooks/useGameState';
 import { formatNumber, formatMoney } from '@/lib/supabase-helpers';
-import { Shield, Trash2, DollarSign, Sprout, BarChart3, Music, Users, TrendingUp, Lock, Eye, EyeOff, Loader2, Search, X, Clock, Zap, RefreshCw, Hash, Mic2, Award } from 'lucide-react';
+import { Shield, Trash2, DollarSign, Sprout, BarChart3, Music, Users, TrendingUp, Lock, Eye, EyeOff, Loader2, Search, X, Clock, Zap, RefreshCw, Hash, Mic2, Award, Timer, SkipForward, Banknote, Globe, RotateCcw, Rocket, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Props {
@@ -23,6 +23,9 @@ export default function AdminApp({ profile }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [boostAmount, setBoostAmount] = useState('100000');
   const [tab, setTab] = useState<'artists' | 'songs' | 'game' | 'stats'>('artists');
+  const [turnDuration, setTurnDuration] = useState('');
+  const [followerPlatform, setFollowerPlatform] = useState('spotify');
+  const [followerCount, setFollowerCount] = useState('100000');
 
   useEffect(() => {
     if (!unlocked) return;
@@ -190,17 +193,94 @@ export default function AdminApp({ profile }: Props) {
               </div>
             </div>
             <div className="bg-[#141414] rounded-xl p-4 border border-[#222]">
-              <h3 className="text-sm font-bold mb-3 flex items-center gap-2"><Zap className="w-4 h-4 text-yellow-400" /> Quick Actions</h3>
+              <h3 className="text-sm font-bold mb-3 flex items-center gap-2"><Timer className="w-4 h-4 text-orange-400" /> Fix Time</h3>
               <div className="space-y-2">
+                <div>
+                  <label className="text-xs text-[#888] mb-1 block">Turn Duration (minutes)</label>
+                  <div className="flex gap-2">
+                    <input type="number" value={turnDuration} onChange={(e) => setTurnDuration(e.target.value)} placeholder={String(gameState?.turn_duration_minutes || 60)}
+                      className="flex-1 bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm outline-none focus:border-orange-500" />
+                    <button onClick={() => callAdmin('set_turn_duration', { amount: parseInt(turnDuration) || 60 })} disabled={loading}
+                      className="px-3 py-2 bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-lg text-xs font-medium disabled:opacity-50">
+                      Set
+                    </button>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  {[15, 30, 60, 120].map(m => (
+                    <button key={m} onClick={() => callAdmin('set_turn_duration', { amount: m })} disabled={loading}
+                      className="flex-1 bg-[#0a0a0a] border border-[#333] rounded-lg py-2 text-xs font-medium hover:border-orange-500/50 disabled:opacity-50">
+                      {m}m
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="bg-[#141414] rounded-xl p-4 border border-[#222]">
+              <h3 className="text-sm font-bold mb-3 flex items-center gap-2"><Zap className="w-4 h-4 text-yellow-400" /> Quick Actions</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => callAdmin('reset_timer')} disabled={loading}
+                  className="flex items-center justify-center gap-1.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg py-2.5 text-xs font-medium disabled:opacity-50">
+                  <RefreshCw className="w-3.5 h-3.5" /> Reset Timer
+                </button>
+                <button onClick={() => callAdmin('force_next_turn')} disabled={loading}
+                  className="flex items-center justify-center gap-1.5 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-lg py-2.5 text-xs font-medium disabled:opacity-50">
+                  <SkipForward className="w-3.5 h-3.5" /> Skip Turn
+                </button>
                 <button onClick={() => {
                   fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-turn`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` }
                   }).then(() => toast.success('Turn processing triggered!')).catch(() => toast.error('Failed'));
-                }} className="w-full flex items-center justify-center gap-2 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg py-2.5 text-xs font-medium">
-                  <RefreshCw className="w-3.5 h-3.5" /> Force Process Turn
+                }} className="flex items-center justify-center gap-1.5 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg py-2.5 text-xs font-medium">
+                  <Rocket className="w-3.5 h-3.5" /> Process Turn
+                </button>
+                <button onClick={() => callAdmin('boost_all_streams', { amount: parseInt(boostAmount) || 50000 })} disabled={loading}
+                  className="flex items-center justify-center gap-1.5 bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-lg py-2.5 text-xs font-medium disabled:opacity-50">
+                  <TrendingUp className="w-3.5 h-3.5" /> Boost All Streams
                 </button>
               </div>
             </div>
+            <div className="bg-[#141414] rounded-xl p-4 border border-[#222]">
+              <h3 className="text-sm font-bold mb-3 flex items-center gap-2"><Banknote className="w-4 h-4 text-emerald-400" /> Economy Controls</h3>
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <input type="number" value={boostAmount} onChange={(e) => setBoostAmount(e.target.value)} placeholder="Amount"
+                    className="flex-1 bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button onClick={() => callAdmin('give_money_all', { amount: parseInt(boostAmount) || 10000 })} disabled={loading}
+                    className="flex items-center justify-center gap-1.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg py-2.5 text-xs font-medium disabled:opacity-50">
+                    <DollarSign className="w-3.5 h-3.5" /> Give All $
+                  </button>
+                  <button onClick={() => { if (confirm('Reset all money to starting amounts?')) callAdmin('reset_economy'); }} disabled={loading}
+                    className="flex items-center justify-center gap-1.5 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg py-2.5 text-xs font-medium disabled:opacity-50">
+                    <RotateCcw className="w-3.5 h-3.5" /> Reset Economy
+                  </button>
+                </div>
+              </div>
+            </div>
+            {/* Set Followers panel */}
+            {selectedArtist && (
+              <div className="bg-[#141414] rounded-xl p-4 border border-[#222] md:col-span-2">
+                <h3 className="text-sm font-bold mb-3 flex items-center gap-2"><Globe className="w-4 h-4 text-pink-400" /> Set Followers: {selectedArtist.artist_name}</h3>
+                <div className="flex gap-2 mb-2">
+                  <select value={followerPlatform} onChange={(e) => setFollowerPlatform(e.target.value)}
+                    className="bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm outline-none">
+                    <option value="spotify">Spotify</option>
+                    <option value="apple">Apple Music</option>
+                    <option value="youtube">YouTube</option>
+                    <option value="x">X</option>
+                    <option value="monthly">Monthly Listeners</option>
+                  </select>
+                  <input type="number" value={followerCount} onChange={(e) => setFollowerCount(e.target.value)} placeholder="Count"
+                    className="flex-1 bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm outline-none focus:border-pink-500" />
+                  <button onClick={() => callAdmin('set_followers', { artist_id: selectedArtist.id, platform: followerPlatform, count: parseInt(followerCount) || 0 })} disabled={loading}
+                    className="px-4 py-2 bg-pink-500/20 text-pink-400 border border-pink-500/30 rounded-lg text-xs font-medium disabled:opacity-50">
+                    Set
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -261,6 +341,10 @@ export default function AdminApp({ profile }: Props) {
                       <button onClick={() => callAdmin('industry_plant', { artist_id: selectedArtist.id })} disabled={loading}
                         className="flex items-center justify-center gap-1.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg py-2.5 text-xs font-medium disabled:opacity-50">
                         <Sprout className="w-3.5 h-3.5" /> Industry Plant
+                      </button>
+                      <button onClick={() => callAdmin('give_money', { artist_id: selectedArtist.id, amount: parseInt(boostAmount) })} disabled={loading}
+                        className="flex items-center justify-center gap-1.5 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-lg py-2.5 text-xs font-medium disabled:opacity-50">
+                        <Banknote className="w-3.5 h-3.5" /> Give Money
                       </button>
                       <button onClick={() => { if (confirm(`Delete ${selectedArtist.artist_name} and all their data?`)) callAdmin('delete_artist', { artist_id: selectedArtist.id }); }} disabled={loading}
                         className="flex items-center justify-center gap-1.5 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg py-2.5 text-xs font-medium disabled:opacity-50">

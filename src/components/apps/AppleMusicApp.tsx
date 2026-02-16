@@ -44,7 +44,7 @@ export default function AppleMusicApp({ profile }: Props) {
   const playSong = (song: any) => setCurrentlyPlaying(song);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-44px)] bg-[#000] text-[#fff]">
+    <div className="flex flex-col h-full bg-[#000] text-[#fff]">
       <div className="flex-1 overflow-y-auto">
       {section === 'listen' && (
         <div>
