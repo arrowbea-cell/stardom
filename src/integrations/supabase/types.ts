@@ -204,6 +204,54 @@ export type Database = {
           },
         ]
       }
+      beefs: {
+        Row: {
+          clout_gained: number
+          created_at: string
+          diss_track_title: string | null
+          id: string
+          initiator_id: string
+          intensity: number
+          status: string
+          target_id: string
+        }
+        Insert: {
+          clout_gained?: number
+          created_at?: string
+          diss_track_title?: string | null
+          id?: string
+          initiator_id: string
+          intensity?: number
+          status?: string
+          target_id: string
+        }
+        Update: {
+          clout_gained?: number
+          created_at?: string
+          diss_track_title?: string | null
+          id?: string
+          initiator_id?: string
+          intensity?: number
+          status?: string
+          target_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beefs_initiator_id_fkey"
+            columns: ["initiator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "beefs_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       charts: {
         Row: {
           artist_id: string
@@ -291,6 +339,56 @@ export type Database = {
           {
             foreignKeyName: "collaborations_sender_id_fkey"
             columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      concerts: {
+        Row: {
+          artist_id: string
+          city: string
+          country: string
+          created_at: string
+          id: string
+          revenue: number
+          status: string
+          ticket_price: number
+          tickets_sold: number
+          venue_capacity: number
+          venue_name: string
+        }
+        Insert: {
+          artist_id: string
+          city: string
+          country: string
+          created_at?: string
+          id?: string
+          revenue?: number
+          status?: string
+          ticket_price?: number
+          tickets_sold?: number
+          venue_capacity?: number
+          venue_name: string
+        }
+        Update: {
+          artist_id?: string
+          city?: string
+          country?: string
+          created_at?: string
+          id?: string
+          revenue?: number
+          status?: string
+          ticket_price?: number
+          tickets_sold?: number
+          venue_capacity?: number
+          venue_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "concerts_artist_id_fkey"
+            columns: ["artist_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -633,6 +731,53 @@ export type Database = {
             columns: ["song_id"]
             isOneToOne: false
             referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      record_deals: {
+        Row: {
+          active: boolean
+          advance_amount: number
+          artist_id: string
+          deal_type: string
+          duration_turns: number
+          id: string
+          label_name: string
+          royalty_rate: number
+          signed_at: string
+          turns_remaining: number
+        }
+        Insert: {
+          active?: boolean
+          advance_amount?: number
+          artist_id: string
+          deal_type?: string
+          duration_turns?: number
+          id?: string
+          label_name: string
+          royalty_rate?: number
+          signed_at?: string
+          turns_remaining?: number
+        }
+        Update: {
+          active?: boolean
+          advance_amount?: number
+          artist_id?: string
+          deal_type?: string
+          duration_turns?: number
+          id?: string
+          label_name?: string
+          royalty_rate?: number
+          signed_at?: string
+          turns_remaining?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "record_deals_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

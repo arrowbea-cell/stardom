@@ -3,7 +3,7 @@ import { Profile } from '@/hooks/useProfile';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatNumber, formatMoney } from '@/lib/supabase-helpers';
-import { ShoppingBag, Plus, TrendingUp, DollarSign, Package } from 'lucide-react';
+import { ShoppingBag, Plus, TrendingUp, DollarSign, Package, Shirt, Disc3, ImageIcon, Gift, Headphones } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Props {
@@ -20,13 +20,17 @@ interface MerchItem {
   created_at: string;
 }
 
+const CATEGORY_ICONS: Record<string, any> = {
+  tshirt: Shirt, hoodie: Shirt, hat: Headphones, poster: ImageIcon, vinyl: Disc3, bundle: Gift,
+};
+
 const MERCH_TEMPLATES = [
-  { category: 'tshirt', emoji: '👕', nameTemplates: ['Classic Tee', 'Tour Tee', 'Logo Tee', 'Vintage Tee'], baseCost: 500, basePrice: 35 },
-  { category: 'hoodie', emoji: '🧥', nameTemplates: ['Logo Hoodie', 'Tour Hoodie', 'Oversized Hoodie'], baseCost: 800, basePrice: 65 },
-  { category: 'hat', emoji: '🧢', nameTemplates: ['Snapback', 'Dad Hat', 'Beanie'], baseCost: 300, basePrice: 30 },
-  { category: 'poster', emoji: '🖼️', nameTemplates: ['Album Poster', 'Tour Poster', 'Signed Poster'], baseCost: 200, basePrice: 20 },
-  { category: 'vinyl', emoji: '💿', nameTemplates: ['Limited Vinyl', 'Deluxe Vinyl', 'Signed Vinyl'], baseCost: 1000, basePrice: 45 },
-  { category: 'bundle', emoji: '📦', nameTemplates: ['Fan Bundle', 'VIP Bundle', 'Deluxe Bundle'], baseCost: 2000, basePrice: 120 },
+  { category: 'tshirt', icon: Shirt, nameTemplates: ['Classic Tee', 'Tour Tee', 'Logo Tee', 'Vintage Tee'], baseCost: 500, basePrice: 35 },
+  { category: 'hoodie', icon: Shirt, nameTemplates: ['Logo Hoodie', 'Tour Hoodie', 'Oversized Hoodie'], baseCost: 800, basePrice: 65 },
+  { category: 'hat', icon: Headphones, nameTemplates: ['Snapback', 'Dad Hat', 'Beanie'], baseCost: 300, basePrice: 30 },
+  { category: 'poster', icon: ImageIcon, nameTemplates: ['Album Poster', 'Tour Poster', 'Signed Poster'], baseCost: 200, basePrice: 20 },
+  { category: 'vinyl', icon: Disc3, nameTemplates: ['Limited Vinyl', 'Deluxe Vinyl', 'Signed Vinyl'], baseCost: 1000, basePrice: 45 },
+  { category: 'bundle', icon: Gift, nameTemplates: ['Fan Bundle', 'VIP Bundle', 'Deluxe Bundle'], baseCost: 2000, basePrice: 120 },
 ];
 
 export default function MerchApp({ profile }: Props) {
@@ -46,39 +50,27 @@ export default function MerchApp({ profile }: Props) {
     if (!user) return;
     const template = MERCH_TEMPLATES[selectedTemplate];
     const name = customName.trim() || template.nameTemplates[Math.floor(Math.random() * template.nameTemplates.length)];
-
-    if (profile.current_money < template.baseCost) {
-      toast.error("Can't afford to produce this merch!");
-      return;
-    }
+    if (profile.current_money < template.baseCost) { toast.error("Can't afford to produce this merch!"); return; }
 
     setCreating(true);
     await new Promise(r => setTimeout(r, 1500));
-
     const { error } = await supabase.from('merch_items').insert({
-      artist_id: profile.id,
-      name,
-      category: template.category,
-      price: template.basePrice,
-      emoji: template.emoji,
+      artist_id: profile.id, name, category: template.category, price: template.basePrice, emoji: template.category,
     });
-
     if (error) { toast.error(error.message); setCreating(false); return; }
 
-    await supabase.from('profiles').update({
-      current_money: profile.current_money - template.baseCost,
-    }).eq('id', profile.id);
-
-    toast.success(`"${name}" merch created! 🛍️`);
+    await supabase.from('profiles').update({ current_money: profile.current_money - template.baseCost }).eq('id', profile.id);
+    toast.success(`"${name}" merch created!`);
     setCreating(false);
     setCustomName('');
-
     const { data: newMerch } = await supabase.from('merch_items').select('*').eq('artist_id', profile.id).order('sales', { ascending: false });
     if (newMerch) setMerch(newMerch as MerchItem[]);
   };
 
   const totalRevenue = merch.reduce((sum, m) => sum + (m.sales * m.price), 0);
   const totalSales = merch.reduce((sum, m) => sum + m.sales, 0);
+
+  const getCategoryIcon = (cat: string) => CATEGORY_ICONS[cat] || ShoppingBag;
 
   return (
     <div className="min-h-full bg-[#0a0a0a] text-white">
@@ -105,43 +97,44 @@ export default function MerchApp({ profile }: Props) {
 
       {tab === 'store' && (
         <div className="px-4 py-4">
-          {/* Revenue cards */}
           <div className="grid grid-cols-2 gap-3 mb-4">
             <div className="bg-[#1a1a1a] rounded-xl p-3">
-              <div className="flex items-center gap-1.5 text-[#888] text-xs mb-1">
-                <DollarSign className="w-3 h-3" /> Revenue
-              </div>
+              <DollarSign className="w-4 h-4 text-[#ec4899] mb-1" />
               <p className="font-bold text-lg">{formatMoney(totalRevenue)}</p>
+              <p className="text-[10px] text-[#888]">Revenue</p>
             </div>
             <div className="bg-[#1a1a1a] rounded-xl p-3">
-              <div className="flex items-center gap-1.5 text-[#888] text-xs mb-1">
-                <Package className="w-3 h-3" /> Units Sold
-              </div>
+              <Package className="w-4 h-4 text-[#ec4899] mb-1" />
               <p className="font-bold text-lg">{formatNumber(totalSales)}</p>
+              <p className="text-[10px] text-[#888]">Units Sold</p>
             </div>
           </div>
 
           {merch.length > 0 ? (
             <div className="space-y-2">
-              {merch.map((item) => (
-                <div key={item.id} className="bg-[#1a1a1a] rounded-xl p-4 flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-[#282828] flex items-center justify-center text-2xl">{item.emoji}</div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold truncate">{item.name}</p>
-                    <p className="text-xs text-[#888]">${item.price} • {formatNumber(item.sales)} sold</p>
+              {merch.map((item) => {
+                const ItemIcon = getCategoryIcon(item.category);
+                return (
+                  <div key={item.id} className="bg-[#1a1a1a] rounded-xl p-4 flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-[#282828] flex items-center justify-center">
+                      <ItemIcon className="w-6 h-6 text-[#ec4899]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold truncate">{item.name}</p>
+                      <p className="text-xs text-[#888]">${item.price} • {formatNumber(item.sales)} sold</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-[#ec4899]">{formatMoney(item.sales * item.price)}</p>
+                      <p className="text-[10px] text-[#888]">revenue</p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-[#ec4899]">{formatMoney(item.sales * item.price)}</p>
-                    <p className="text-[10px] text-[#888]">revenue</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-12 text-[#888]">
               <ShoppingBag className="w-10 h-10 mx-auto mb-3 opacity-50" />
               <p className="text-sm">No merch yet</p>
-              <p className="text-xs mt-1">Create merch to earn passive income from fans!</p>
             </div>
           )}
         </div>
@@ -152,31 +145,27 @@ export default function MerchApp({ profile }: Props) {
           <div>
             <h3 className="text-sm font-bold text-[#888] mb-2">Choose Merch Type</h3>
             <div className="grid grid-cols-3 gap-2">
-              {MERCH_TEMPLATES.map((t, i) => (
-                <button
-                  key={t.category}
-                  onClick={() => setSelectedTemplate(i)}
-                  className={`flex flex-col items-center gap-1.5 p-3 rounded-xl ${
-                    selectedTemplate === i ? 'bg-[#ec4899]/20 ring-1 ring-[#ec4899]' : 'bg-[#1a1a1a]'
-                  }`}
-                >
-                  <span className="text-2xl">{t.emoji}</span>
-                  <span className="text-xs font-medium capitalize">{t.category}</span>
-                  <span className="text-[10px] text-[#888]">{formatMoney(t.baseCost)}</span>
-                </button>
-              ))}
+              {MERCH_TEMPLATES.map((t, i) => {
+                const TemplateIcon = t.icon;
+                return (
+                  <button key={t.category} onClick={() => setSelectedTemplate(i)}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl ${
+                      selectedTemplate === i ? 'bg-[#ec4899]/20 ring-1 ring-[#ec4899]' : 'bg-[#1a1a1a]'
+                    }`}>
+                    <TemplateIcon className="w-6 h-6 text-[#ec4899]" />
+                    <span className="text-xs font-medium capitalize">{t.category}</span>
+                    <span className="text-[10px] text-[#888]">{formatMoney(t.baseCost)}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           <div>
             <h3 className="text-sm font-bold text-[#888] mb-2">Custom Name (optional)</h3>
-            <input
-              type="text"
-              value={customName}
-              onChange={(e) => setCustomName(e.target.value)}
+            <input type="text" value={customName} onChange={(e) => setCustomName(e.target.value)}
               placeholder={MERCH_TEMPLATES[selectedTemplate].nameTemplates[0]}
-              className="w-full bg-[#1a1a1a] rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 ring-[#ec4899]"
-            />
+              className="w-full bg-[#1a1a1a] rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 ring-[#ec4899]" />
           </div>
 
           <div className="bg-[#1a1a1a] rounded-xl p-4">
@@ -190,16 +179,10 @@ export default function MerchApp({ profile }: Props) {
             </div>
           </div>
 
-          <button
-            onClick={handleCreate}
-            disabled={creating}
-            className="w-full bg-gradient-to-r from-[#ec4899] to-[#be185d] rounded-xl py-4 font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {creating ? (
-              <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Creating...</>
-            ) : (
-              <><Plus className="w-5 h-5" /> Create Merch ({formatMoney(MERCH_TEMPLATES[selectedTemplate].baseCost)})</>
-            )}
+          <button onClick={handleCreate} disabled={creating}
+            className="w-full bg-gradient-to-r from-[#ec4899] to-[#be185d] rounded-xl py-4 font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2">
+            {creating ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Creating...</>
+              : <><Plus className="w-5 h-5" /> Create Merch ({formatMoney(MERCH_TEMPLATES[selectedTemplate].baseCost)})</>}
           </button>
         </div>
       )}

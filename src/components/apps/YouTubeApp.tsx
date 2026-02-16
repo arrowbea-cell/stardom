@@ -1,16 +1,37 @@
 import { useState, useEffect } from 'react';
 import { Profile } from '@/hooks/useProfile';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { formatNumber } from '@/lib/supabase-helpers';
-import { Home, Search, PlaySquare, Bell, User, Music, ThumbsUp, ThumbsDown, Share2, Play, X } from 'lucide-react';
+import { formatNumber, formatMoney } from '@/lib/supabase-helpers';
+import { Home, Search, PlaySquare, Bell, User, Music, ThumbsUp, ThumbsDown, Share2, Play, X, Film, DollarSign, Eye, TrendingUp, Video, Clapperboard, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Props {
   profile: Profile;
 }
 
-type Section = 'home' | 'search' | 'shorts' | 'channel';
+type Section = 'home' | 'search' | 'shorts' | 'channel' | 'create-video';
+
+interface MusicVideo {
+  id: string;
+  song_id: string;
+  budget: string;
+  views: number;
+  youtube_boost: number;
+  cost: number;
+  created_at: string;
+  song_title?: string;
+}
+
+const BUDGET_TIERS = [
+  { id: 'low', name: 'Lyric Video', cost: 500, boost: 1000, icon: Film, desc: 'Animated text over visuals', viewMultiplier: 1 },
+  { id: 'medium', name: 'Standard MV', cost: 5000, boost: 10000, icon: Clapperboard, desc: 'Professional music video', viewMultiplier: 3 },
+  { id: 'high', name: 'Cinematic MV', cost: 20000, boost: 50000, icon: Video, desc: 'High-budget production', viewMultiplier: 8 },
+  { id: 'blockbuster', name: 'Blockbuster MV', cost: 100000, boost: 250000, icon: Sparkles, desc: 'A-list directors, VFX, exotic locations', viewMultiplier: 20 },
+];
 
 export default function YouTubeApp({ profile }: Props) {
+  const { user } = useAuth();
   const [section, setSection] = useState<Section>('home');
   const [allArtists, setAllArtists] = useState<Profile[]>([]);
   const [viewingArtist, setViewingArtist] = useState<Profile>(profile);
@@ -18,11 +39,26 @@ export default function YouTubeApp({ profile }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Profile[]>([]);
   const [subscribed, setSubscribed] = useState<Set<string>>(new Set());
+  // Music video state
+  const [releasedSongs, setReleasedSongs] = useState<any[]>([]);
+  const [videos, setVideos] = useState<MusicVideo[]>([]);
+  const [selectedSong, setSelectedSong] = useState<string | null>(null);
+  const [selectedBudget, setSelectedBudget] = useState('medium');
+  const [producing, setProducing] = useState(false);
 
   useEffect(() => {
     supabase.from('profiles').select('*').order('youtube_subscribers', { ascending: false }).limit(20)
       .then(({ data }) => { if (data) setAllArtists(data as Profile[]); });
-  }, []);
+    // Load released songs for video creation
+    supabase.from('songs').select('*').eq('artist_id', profile.id).gt('streams', 0).order('streams', { ascending: false })
+      .then(({ data }) => { if (data) setReleasedSongs(data); });
+    // Load existing music videos
+    supabase.from('music_videos').select('*, songs!music_videos_song_id_fkey(title)')
+      .eq('artist_id', profile.id).order('created_at', { ascending: false })
+      .then(({ data }) => {
+        if (data) setVideos(data.map((v: any) => ({ ...v, song_title: v.songs?.title })));
+      });
+  }, [profile.id]);
 
   useEffect(() => {
     supabase.from('songs').select('*').eq('artist_id', viewingArtist.id).order('streams', { ascending: false })
@@ -46,6 +82,40 @@ export default function YouTubeApp({ profile }: Props) {
     });
   };
 
+  const handleProduceVideo = async () => {
+    if (!user || !selectedSong) return;
+    const tier = BUDGET_TIERS.find(t => t.id === selectedBudget)!;
+    if (profile.current_money < tier.cost) {
+      toast.error("You can't afford this production!");
+      return;
+    }
+    setProducing(true);
+    await new Promise(r => setTimeout(r, 2500));
+
+    const initialViews = Math.floor((Math.random() * 5000 + 1000) * tier.viewMultiplier);
+    const { error } = await supabase.from('music_videos').insert({
+      artist_id: profile.id, song_id: selectedSong, budget: tier.id,
+      views: initialViews, youtube_boost: tier.boost, cost: tier.cost,
+    });
+    if (error) { toast.error(error.message); setProducing(false); return; }
+
+    await supabase.from('profiles').update({
+      current_money: profile.current_money - tier.cost,
+      youtube_subscribers: profile.youtube_subscribers + Math.floor(tier.boost * 0.1),
+      total_streams: profile.total_streams + Math.floor(initialViews * 0.5),
+    }).eq('id', profile.id);
+
+    toast.success(`Music video produced! ${formatNumber(initialViews)} initial views!`);
+    setProducing(false);
+    setSelectedSong(null);
+
+    const { data: newVideos } = await supabase.from('music_videos').select('*, songs!music_videos_song_id_fkey(title)')
+      .eq('artist_id', profile.id).order('created_at', { ascending: false });
+    if (newVideos) setVideos(newVideos.map((v: any) => ({ ...v, song_title: v.songs?.title })));
+  };
+
+  const totalViews = videos.reduce((sum, v) => sum + v.views, 0);
+
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-[#fff]">
       {/* Header */}
@@ -62,6 +132,7 @@ export default function YouTubeApp({ profile }: Props) {
         </div>
       </div>
 
+      {/* HOME */}
       {section === 'home' && (
         <div className="pb-20">
           <div className="flex gap-2 px-4 py-3 overflow-x-auto">
@@ -69,6 +140,35 @@ export default function YouTubeApp({ profile }: Props) {
               <div key={c} className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap ${c === 'Music' ? 'bg-white text-black' : 'bg-[#272727] text-[#f1f1f1]'}`}>{c}</div>
             ))}
           </div>
+
+          {/* Your Music Videos section */}
+          {videos.length > 0 && (
+            <div className="px-4 mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-base">Your Music Videos</h3>
+                <span className="text-xs text-[#aaa]">{formatNumber(totalViews)} total views</span>
+              </div>
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {videos.slice(0, 5).map((video) => {
+                  const tier = BUDGET_TIERS.find(t => t.id === video.budget);
+                  const TierIcon = tier?.icon || Film;
+                  return (
+                    <div key={video.id} className="min-w-[200px]">
+                      <div className="w-[200px] aspect-video rounded-xl bg-[#272727] overflow-hidden relative flex items-center justify-center">
+                        <TierIcon className="w-10 h-10 text-[#ff0000]/60" />
+                        <div className="absolute bottom-1 right-1 bg-black/80 rounded px-1.5 py-0.5 flex items-center gap-1">
+                          <Eye className="w-2.5 h-2.5" />
+                          <span className="text-[9px]">{formatNumber(video.views)}</span>
+                        </div>
+                      </div>
+                      <p className="text-xs font-medium mt-1.5 truncate">{video.song_title || 'Unknown'} - {tier?.name}</p>
+                      <p className="text-[10px] text-[#aaa]">{formatNumber(video.views)} views</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Shorts row */}
           <div className="px-4 mb-6">
@@ -122,14 +222,8 @@ export default function YouTubeApp({ profile }: Props) {
           <div className="px-4 pt-4 pb-2">
             <div className="flex items-center gap-2 bg-[#272727] rounded-full px-4 py-2.5">
               <Search className="w-4 h-4 text-[#aaa]" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Search YouTube"
-                className="bg-transparent text-sm text-white placeholder-[#aaa] outline-none flex-1"
-                autoFocus
-              />
+              <input type="text" value={searchQuery} onChange={(e) => handleSearch(e.target.value)}
+                placeholder="Search YouTube" className="bg-transparent text-sm text-white placeholder-[#aaa] outline-none flex-1" autoFocus />
               {searchQuery && <button onClick={() => { setSearchQuery(''); setSearchResults([]); }}><X className="w-4 h-4 text-[#aaa]" /></button>}
             </div>
           </div>
@@ -179,19 +273,16 @@ export default function YouTubeApp({ profile }: Props) {
             <div className="flex-1">
               <h2 className="font-bold text-lg">{viewingArtist.artist_name}</h2>
               <p className="text-xs text-[#aaa]">@{viewingArtist.artist_name.toLowerCase().replace(/\s/g, '')} • {formatNumber(viewingArtist.youtube_subscribers)} subscribers</p>
-              <p className="text-xs text-[#aaa] mt-0.5">{viewingArtist.bio?.slice(0, 60) || 'Music artist'}</p>
             </div>
           </div>
           <div className="px-4 mb-4">
-            <button
-              onClick={() => toggleSubscribe(viewingArtist.id)}
-              className={`text-sm font-medium px-6 py-2.5 rounded-full w-full ${subscribed.has(viewingArtist.id) ? 'bg-[#272727] text-[#aaa]' : 'bg-[#ff0000] text-white'}`}
-            >
+            <button onClick={() => toggleSubscribe(viewingArtist.id)}
+              className={`text-sm font-medium px-6 py-2.5 rounded-full w-full ${subscribed.has(viewingArtist.id) ? 'bg-[#272727] text-[#aaa]' : 'bg-[#ff0000] text-white'}`}>
               {subscribed.has(viewingArtist.id) ? 'Subscribed' : 'Subscribe'}
             </button>
           </div>
           <div className="flex border-b border-[#272727] px-4 overflow-x-auto">
-            {['Home', 'Videos', 'Shorts', 'Community', 'About'].map((t, i) => (
+            {['Home', 'Videos', 'Shorts', 'Community'].map((t, i) => (
               <button key={t} className={`py-3 px-4 text-sm font-medium whitespace-nowrap ${i === 0 ? 'text-white border-b-2 border-white' : 'text-[#aaa]'}`}>{t}</button>
             ))}
           </div>
@@ -206,15 +297,12 @@ export default function YouTubeApp({ profile }: Props) {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium leading-tight line-clamp-2">{song.title} - Official Video</p>
                   <p className="text-xs text-[#aaa] mt-1">{formatNumber(song.streams)} views</p>
-                  <p className="text-xs text-[#aaa]">2 days ago</p>
                 </div>
               </div>
             )) : (
               <p className="text-sm text-[#aaa]">No videos uploaded yet</p>
             )}
           </div>
-
-          {/* Recommended channels */}
           <div className="px-4 mt-4">
             <h3 className="text-base font-bold mb-3">Recommended Channels</h3>
             <div className="flex gap-4 overflow-x-auto pb-2">
@@ -232,23 +320,124 @@ export default function YouTubeApp({ profile }: Props) {
         </div>
       )}
 
+      {/* CREATE VIDEO */}
+      {section === 'create-video' && (
+        <div className="pb-20 px-4 py-4 space-y-5">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-[#ff0000] flex items-center justify-center">
+              <Clapperboard className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold">Create Music Video</h2>
+              <p className="text-xs text-[#aaa]">{videos.length} videos • {formatNumber(totalViews)} total views</p>
+            </div>
+          </div>
+
+          {/* Select song */}
+          <div>
+            <h3 className="text-sm font-bold text-[#aaa] mb-2">Select a Released Song</h3>
+            {releasedSongs.length > 0 ? (
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {releasedSongs.map((song) => (
+                  <button key={song.id} onClick={() => setSelectedSong(song.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left ${
+                      selectedSong === song.id ? 'bg-[#ff0000]/20 ring-1 ring-[#ff0000]' : 'bg-[#1a1a1a]'
+                    }`}>
+                    <div className="w-10 h-10 rounded-lg bg-[#282828] overflow-hidden flex-shrink-0">
+                      {song.cover_url ? <img src={song.cover_url} alt="" className="w-full h-full object-cover" /> : <Music className="w-4 h-4 text-[#555] m-3" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{song.title}</p>
+                      <p className="text-xs text-[#888]">{formatNumber(song.streams)} streams</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-[#888] bg-[#1a1a1a] rounded-xl p-4">Release a song first!</p>
+            )}
+          </div>
+
+          {/* Budget tiers */}
+          <div>
+            <h3 className="text-sm font-bold text-[#aaa] mb-2">Production Budget</h3>
+            <div className="space-y-2">
+              {BUDGET_TIERS.map((tier) => {
+                const TierIcon = tier.icon;
+                return (
+                  <button key={tier.id} onClick={() => setSelectedBudget(tier.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left ${
+                      selectedBudget === tier.id ? 'bg-[#ff0000]/20 ring-1 ring-[#ff0000]' : 'bg-[#1a1a1a]'
+                    }`}>
+                    <div className="w-10 h-10 rounded-lg bg-[#282828] flex items-center justify-center">
+                      <TierIcon className="w-5 h-5 text-[#ff0000]" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-bold">{tier.name}</p>
+                        <p className="text-sm font-bold text-[#ff0000]">{formatMoney(tier.cost)}</p>
+                      </div>
+                      <p className="text-xs text-[#888] mt-0.5">{tier.desc}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#ff0000]/10 text-[#ff0000]">+{formatNumber(tier.boost)} YT boost</span>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <button onClick={handleProduceVideo} disabled={producing || !selectedSong}
+            className="w-full bg-gradient-to-r from-[#ff0000] to-[#cc0000] rounded-xl py-4 font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2">
+            {producing ? (
+              <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Producing...</>
+            ) : (
+              <><Film className="w-5 h-5" /> Produce Music Video</>
+            )}
+          </button>
+
+          {/* Existing videos */}
+          {videos.length > 0 && (
+            <div>
+              <h3 className="text-sm font-bold text-[#aaa] mb-2">Your Videos</h3>
+              <div className="space-y-2">
+                {videos.map((video) => {
+                  const tier = BUDGET_TIERS.find(t => t.id === video.budget);
+                  const TierIcon = tier?.icon || Film;
+                  return (
+                    <div key={video.id} className="bg-[#1a1a1a] rounded-xl p-3 flex items-center gap-3">
+                      <div className="w-14 h-9 rounded-lg bg-[#282828] flex items-center justify-center">
+                        <TierIcon className="w-5 h-5 text-[#ff0000]/60" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold truncate">{video.song_title || 'Unknown'}</p>
+                        <p className="text-[10px] text-[#888]">{tier?.name} • {formatNumber(video.views)} views</p>
+                      </div>
+                      <p className="text-xs text-[#888]">{formatMoney(video.cost)}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Bottom nav */}
       <div className="sticky bottom-0 bg-[#0f0f0f] border-t border-[#272727] flex justify-around py-2 z-30">
         <button onClick={() => setSection('home')} className={`flex flex-col items-center gap-0.5 ${section === 'home' ? 'text-white' : 'text-[#aaa]'}`}>
-          <Home className="w-5 h-5" />
-          <span className="text-[10px]">Home</span>
+          <Home className="w-5 h-5" /><span className="text-[10px]">Home</span>
         </button>
         <button onClick={() => setSection('search')} className={`flex flex-col items-center gap-0.5 ${section === 'search' ? 'text-white' : 'text-[#aaa]'}`}>
-          <Search className="w-5 h-5" />
-          <span className="text-[10px]">Explore</span>
+          <Search className="w-5 h-5" /><span className="text-[10px]">Explore</span>
         </button>
-        <button className="flex flex-col items-center gap-0.5 text-[#aaa]">
-          <PlaySquare className="w-5 h-5" />
-          <span className="text-[10px]">Shorts</span>
+        <button onClick={() => setSection('create-video')} className="flex flex-col items-center gap-0.5 text-[#ff0000]">
+          <div className="w-8 h-5 bg-[#ff0000] rounded-md flex items-center justify-center"><Clapperboard className="w-3.5 h-3.5 text-white" /></div>
+          <span className="text-[10px]">Create</span>
         </button>
-        <button className="flex flex-col items-center gap-0.5 text-[#aaa]">
-          <User className="w-5 h-5" />
-          <span className="text-[10px]">You</span>
+        <button onClick={() => { setViewingArtist(profile); setSection('channel'); }} className={`flex flex-col items-center gap-0.5 ${section === 'channel' && viewingArtist.id === profile.id ? 'text-white' : 'text-[#aaa]'}`}>
+          <User className="w-5 h-5" /><span className="text-[10px]">You</span>
         </button>
       </div>
     </div>
