@@ -13,18 +13,22 @@ import StudioApp from '@/components/apps/StudioApp';
 import AdminApp from '@/components/apps/AdminApp';
 import CollabApp from '@/components/apps/CollabApp';
 import BankApp from '@/components/apps/BankApp';
-import MusicVideoApp from '@/components/apps/MusicVideoApp';
 import AwardsApp from '@/components/apps/AwardsApp';
 import MerchApp from '@/components/apps/MerchApp';
 import NewsApp from '@/components/apps/NewsApp';
+import ConcertApp from '@/components/apps/ConcertApp';
+import RecordLabelApp from '@/components/apps/RecordLabelApp';
+import BeefApp from '@/components/apps/BeefApp';
+import FanMailApp from '@/components/apps/FanMailApp';
+import RadioApp from '@/components/apps/RadioApp';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Mic2, Shield, Music, Handshake, Landmark, Clapperboard, Trophy, ShoppingBag, Newspaper } from 'lucide-react';
+import { ChevronLeft, Mic2, Shield, Music, Handshake, Landmark, Trophy, ShoppingBag, Newspaper, Ticket, Building2, Swords, Mail, Radio } from 'lucide-react';
 
 interface Props {
   profile: Profile;
 }
 
-type AppType = 'spotify' | 'apple-music' | 'youtube' | 'youtube-music' | 'x' | 'studio' | 'admin' | 'collab' | 'bank' | 'music-video' | 'awards' | 'merch' | 'news' | null;
+type AppType = 'spotify' | 'apple-music' | 'youtube' | 'youtube-music' | 'x' | 'studio' | 'admin' | 'collab' | 'bank' | 'awards' | 'merch' | 'news' | 'concert' | 'label' | 'beef' | 'fan-mail' | 'radio' | null;
 
 const apps = [
   { id: 'spotify' as const, name: 'Spotify', logo: spotifyLogo, bgClass: 'bg-[#121212]' },
@@ -33,12 +37,16 @@ const apps = [
   { id: 'youtube-music' as const, name: 'YT Music', logo: null, bgClass: 'bg-gradient-to-br from-[#ff0000] to-[#cc0000]' },
   { id: 'x' as const, name: 'X', logo: xLogo, bgClass: 'bg-[#000000]' },
   { id: 'studio' as const, name: 'Studio', logo: null, bgClass: 'bg-gradient-to-br from-[#1db954] to-[#148a3c]' },
-  { id: 'music-video' as const, name: 'Videos', logo: null, bgClass: 'bg-gradient-to-br from-[#dc2626] to-[#991b1b]' },
+  { id: 'concert' as const, name: 'Concerts', logo: null, bgClass: 'bg-gradient-to-br from-[#7c3aed] to-[#5b21b6]' },
+  { id: 'label' as const, name: 'Labels', logo: null, bgClass: 'bg-gradient-to-br from-[#0ea5e9] to-[#0369a1]' },
+  { id: 'radio' as const, name: 'Radio', logo: null, bgClass: 'bg-gradient-to-br from-[#f59e0b] to-[#d97706]' },
   { id: 'collab' as const, name: 'Collabs', logo: null, bgClass: 'bg-gradient-to-br from-[#8b5cf6] to-[#6d28d9]' },
-  { id: 'bank' as const, name: 'Bank', logo: null, bgClass: 'bg-gradient-to-br from-[#0ea5e9] to-[#0369a1]' },
+  { id: 'beef' as const, name: 'Beef', logo: null, bgClass: 'bg-gradient-to-br from-[#ef4444] to-[#b91c1c]' },
+  { id: 'bank' as const, name: 'Bank', logo: null, bgClass: 'bg-gradient-to-br from-[#10b981] to-[#059669]' },
   { id: 'merch' as const, name: 'Merch', logo: null, bgClass: 'bg-gradient-to-br from-[#ec4899] to-[#be185d]' },
+  { id: 'fan-mail' as const, name: 'Fan Mail', logo: null, bgClass: 'bg-gradient-to-br from-[#f472b6] to-[#db2777]' },
   { id: 'awards' as const, name: 'Awards', logo: null, bgClass: 'bg-gradient-to-br from-[#f59e0b] to-[#d97706]' },
-  { id: 'news' as const, name: 'News', logo: null, bgClass: 'bg-gradient-to-br from-[#0ea5e9] to-[#0284c7]' },
+  { id: 'news' as const, name: 'News', logo: null, bgClass: 'bg-gradient-to-br from-[#06b6d4] to-[#0891b2]' },
   { id: 'admin' as const, name: 'Admin', logo: null, bgClass: 'bg-gradient-to-br from-[#ef4444] to-[#f97316]' },
 ];
 
@@ -48,10 +56,14 @@ const APP_ICONS: Record<string, any> = {
   admin: Shield,
   collab: Handshake,
   bank: Landmark,
-  'music-video': Clapperboard,
   awards: Trophy,
   merch: ShoppingBag,
   news: Newspaper,
+  concert: Ticket,
+  label: Building2,
+  beef: Swords,
+  'fan-mail': Mail,
+  radio: Radio,
 };
 
 export default function AppsTab({ profile }: Props) {
@@ -82,10 +94,14 @@ export default function AppsTab({ profile }: Props) {
             {openApp === 'studio' && <StudioApp profile={profile} />}
             {openApp === 'collab' && <CollabApp profile={profile} />}
             {openApp === 'bank' && <BankApp profile={profile} />}
-            {openApp === 'music-video' && <MusicVideoApp profile={profile} />}
             {openApp === 'awards' && <AwardsApp profile={profile} />}
             {openApp === 'merch' && <MerchApp profile={profile} />}
             {openApp === 'news' && <NewsApp profile={profile} />}
+            {openApp === 'concert' && <ConcertApp profile={profile} />}
+            {openApp === 'label' && <RecordLabelApp profile={profile} />}
+            {openApp === 'beef' && <BeefApp profile={profile} />}
+            {openApp === 'fan-mail' && <FanMailApp profile={profile} />}
+            {openApp === 'radio' && <RadioApp profile={profile} />}
             {openApp === 'admin' && <AdminApp profile={profile} />}
           </div>
         </motion.div>
@@ -94,16 +110,16 @@ export default function AppsTab({ profile }: Props) {
   }
 
   return (
-    <div className="p-5">
+    <div className="p-5 pb-24">
       <h2 className="font-display text-lg font-bold mb-5">Your Apps</h2>
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid grid-cols-4 gap-4">
         {apps.map((app) => {
           const Icon = APP_ICONS[app.id];
           return (
             <button
               key={app.id}
               onClick={() => setOpenApp(app.id)}
-              className="flex flex-col items-center gap-2 group"
+              className="flex flex-col items-center gap-1.5 group"
             >
               <div className={`w-14 h-14 rounded-[14px] shadow-lg overflow-hidden flex items-center justify-center transition-transform active:scale-90 ${
                 app.logo ? 'bg-secondary' : app.bgClass
@@ -114,7 +130,7 @@ export default function AppsTab({ profile }: Props) {
                   <Icon className="w-7 h-7 text-white" />
                 ) : null}
               </div>
-              <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors leading-tight">
+              <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors leading-tight text-center">
                 {app.name}
               </span>
             </button>

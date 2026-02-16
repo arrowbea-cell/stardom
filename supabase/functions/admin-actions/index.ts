@@ -25,7 +25,6 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Verify admin password
   if (body.password !== adminPassword) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
@@ -38,12 +37,24 @@ Deno.serve(async (req) => {
   try {
     switch (action) {
       case "delete_artist": {
-        // Delete all related data then the profile
+        // Delete ALL related data across every table
         await supabase.from("promotions").delete().eq("artist_id", artist_id);
         await supabase.from("stream_history").delete().eq("artist_id", artist_id);
         await supabase.from("charts").delete().eq("artist_id", artist_id);
         await supabase.from("post_likes").delete().or(`liker_id.eq.${artist_id},liked_artist_id.eq.${artist_id}`);
-        
+        await supabase.from("music_videos").delete().eq("artist_id", artist_id);
+        await supabase.from("merch_items").delete().eq("artist_id", artist_id);
+        await supabase.from("fan_mail").delete().eq("artist_id", artist_id);
+        await supabase.from("awards").delete().eq("artist_id", artist_id);
+        await supabase.from("concerts").delete().eq("artist_id", artist_id);
+        await supabase.from("record_deals").delete().eq("artist_id", artist_id);
+        await supabase.from("beefs").delete().or(`initiator_id.eq.${artist_id},target_id.eq.${artist_id}`);
+        await supabase.from("travels").delete().eq("artist_id", artist_id);
+        await supabase.from("visas").delete().eq("artist_id", artist_id);
+        await supabase.from("artist_items").delete().eq("artist_id", artist_id);
+        await supabase.from("bank_transactions").delete().or(`sender_id.eq.${artist_id},receiver_id.eq.${artist_id}`);
+        await supabase.from("collaborations").delete().or(`sender_id.eq.${artist_id},receiver_id.eq.${artist_id}`);
+
         // Get songs to delete album_songs
         const { data: artistSongs } = await supabase.from("songs").select("id").eq("artist_id", artist_id);
         if (artistSongs) {
@@ -52,8 +63,7 @@ Deno.serve(async (req) => {
           }
         }
         await supabase.from("songs").delete().eq("artist_id", artist_id);
-        
-        // Delete albums
+
         const { data: artistAlbums } = await supabase.from("albums").select("id").eq("artist_id", artist_id);
         if (artistAlbums) {
           for (const a of artistAlbums) {
@@ -62,7 +72,7 @@ Deno.serve(async (req) => {
         }
         await supabase.from("albums").delete().eq("artist_id", artist_id);
         await supabase.from("profiles").delete().eq("id", artist_id);
-        return new Response(JSON.stringify({ success: true, message: "Artist deleted" }), {
+        return new Response(JSON.stringify({ success: true, message: "Artist and all data deleted" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
@@ -94,7 +104,6 @@ Deno.serve(async (req) => {
       }
 
       case "payola": {
-        // Give artist money + boost their top song
         const payolaAmount = amount || 500000;
         const { data: profile } = await supabase.from("profiles").select("current_money, monthly_listeners, spotify_followers").eq("id", artist_id).single();
         if (profile) {
@@ -104,7 +113,6 @@ Deno.serve(async (req) => {
             spotify_followers: profile.spotify_followers + Math.floor(payolaAmount * 0.05),
           }).eq("id", artist_id);
         }
-        // Boost all their songs
         const { data: songs } = await supabase.from("songs").select("id, streams").eq("artist_id", artist_id);
         if (songs) {
           for (const s of songs) {
@@ -117,7 +125,6 @@ Deno.serve(async (req) => {
       }
 
       case "industry_plant": {
-        // Massive boost to everything
         const { data: profile } = await supabase.from("profiles").select("*").eq("id", artist_id).single();
         if (profile) {
           await supabase.from("profiles").update({
@@ -138,13 +145,12 @@ Deno.serve(async (req) => {
             }).eq("id", s.id);
           }
         }
-        return new Response(JSON.stringify({ success: true, message: "Industry plant activated 🌱" }), {
+        return new Response(JSON.stringify({ success: true, message: "Industry plant activated" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
       case "chart_placement": {
-        // Force a song to a specific chart position
         const position = amount || 1;
         const { data: song } = await supabase.from("songs").select("artist_id").eq("id", song_id).single();
         if (song) {
