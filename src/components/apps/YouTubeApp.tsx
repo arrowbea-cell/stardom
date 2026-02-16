@@ -117,7 +117,7 @@ export default function YouTubeApp({ profile }: Props) {
   const totalViews = videos.reduce((sum, v) => sum + v.views, 0);
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-[#fff]">
+    <div className="flex flex-col h-[calc(100vh-44px)] bg-[#0f0f0f] text-[#fff]">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-[#0f0f0f] border-b border-[#272727]">
         <div className="flex items-center gap-1">
@@ -132,9 +132,10 @@ export default function YouTubeApp({ profile }: Props) {
         </div>
       </div>
 
+      <div className="flex-1 overflow-y-auto">
       {/* HOME */}
       {section === 'home' && (
-        <div className="pb-20">
+        <div>
           <div className="flex gap-2 px-4 py-3 overflow-x-auto">
             {['All', 'Music', 'Live', 'Gaming', 'Mixes', 'Podcasts'].map((c) => (
               <div key={c} className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap ${c === 'Music' ? 'bg-white text-black' : 'bg-[#272727] text-[#f1f1f1]'}`}>{c}</div>
@@ -218,7 +219,7 @@ export default function YouTubeApp({ profile }: Props) {
 
       {/* SEARCH */}
       {section === 'search' && (
-        <div className="pb-20">
+        <div>
           <div className="px-4 pt-4 pb-2">
             <div className="flex items-center gap-2 bg-[#272727] rounded-full px-4 py-2.5">
               <Search className="w-4 h-4 text-[#aaa]" />
@@ -264,7 +265,7 @@ export default function YouTubeApp({ profile }: Props) {
 
       {/* CHANNEL */}
       {section === 'channel' && (
-        <div className="pb-20">
+        <div>
           <div className="h-24 bg-gradient-to-r from-[#272727] to-[#1a1a1a]" />
           <div className="px-4 py-4 flex items-center gap-4">
             <div className="w-16 h-16 rounded-full bg-[#272727] overflow-hidden flex-shrink-0">
@@ -322,7 +323,7 @@ export default function YouTubeApp({ profile }: Props) {
 
       {/* CREATE VIDEO */}
       {section === 'create-video' && (
-        <div className="pb-20 px-4 py-4 space-y-5">
+        <div className="px-4 py-4 space-y-5">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-xl bg-[#ff0000] flex items-center justify-center">
               <Clapperboard className="w-5 h-5" />
@@ -424,8 +425,10 @@ export default function YouTubeApp({ profile }: Props) {
         </div>
       )}
 
+      </div>{/* end scrollable */}
+
       {/* Bottom nav */}
-      <div className="sticky bottom-0 bg-[#0f0f0f] border-t border-[#272727] flex justify-around py-2 z-30">
+      <div className="flex-shrink-0 bg-[#0f0f0f] border-t border-[#272727] flex justify-around py-2 z-30">
         <button onClick={() => setSection('home')} className={`flex flex-col items-center gap-0.5 ${section === 'home' ? 'text-white' : 'text-[#aaa]'}`}>
           <Home className="w-5 h-5" /><span className="text-[10px]">Home</span>
         </button>

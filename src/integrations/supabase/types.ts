@@ -570,6 +570,64 @@ export type Database = {
           },
         ]
       }
+      pitchfork_reviews: {
+        Row: {
+          album_id: string | null
+          artist_id: string
+          created_at: string
+          id: string
+          review_text: string
+          reviewer_name: string
+          score: number
+          song_id: string | null
+          turn_number: number
+        }
+        Insert: {
+          album_id?: string | null
+          artist_id: string
+          created_at?: string
+          id?: string
+          review_text: string
+          reviewer_name?: string
+          score?: number
+          song_id?: string | null
+          turn_number?: number
+        }
+        Update: {
+          album_id?: string | null
+          artist_id?: string
+          created_at?: string
+          id?: string
+          review_text?: string
+          reviewer_name?: string
+          score?: number
+          song_id?: string | null
+          turn_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pitchfork_reviews_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "albums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pitchfork_reviews_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pitchfork_reviews_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_likes: {
         Row: {
           boost_amount: number
