@@ -33,7 +33,7 @@ export default function Dashboard() {
   if (!profile) return null;
 
   return (
-    <div className="min-h-screen bg-background flex max-w-lg mx-auto relative">
+    <div className="min-h-screen bg-background flex max-w-lg md:max-w-full mx-auto relative">
       {/* Side nav rail */}
       <nav className="sticky top-0 h-screen w-14 flex-shrink-0 bg-card/95 backdrop-blur-xl border-r border-border/50 z-50 flex flex-col items-center py-3 gap-1 overflow-y-auto">
         {TABS.map((tab) => {

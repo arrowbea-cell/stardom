@@ -103,6 +103,7 @@ Deno.serve(async (req) => {
 
         if (profile) {
           const newFollowers = Math.floor(baseStreams * 0.02 * multiplier);
+          const payout = Math.floor(baseStreams * 0.004);
           await supabase
             .from("profiles")
             .update({
@@ -111,6 +112,7 @@ Deno.serve(async (req) => {
               spotify_followers: profile.spotify_followers + Math.floor(newFollowers * 0.5),
               apple_music_listeners: profile.apple_music_listeners + Math.floor(newFollowers * 0.3),
               youtube_subscribers: profile.youtube_subscribers + Math.floor(newFollowers * 0.2),
+              current_money: profile.current_money + payout,
             })
             .eq("id", song.artist_id);
         }
@@ -175,6 +177,30 @@ Deno.serve(async (req) => {
           chart_type: "monthly_listeners",
         }));
         await supabase.from("charts").insert(artistCharts);
+      }
+
+      // Generate Pitchfork reviews for random songs
+      const reviewCandidates = allSongs?.slice(0, 20) || [];
+      const reviewCount = Math.min(3, reviewCandidates.length);
+      const reviewerNames = ["Jayson Greene", "Jenn Pelly", "Ian Cohen", "Sheldon Pearce", "Dani Blum"];
+      const reviewAdj: Record<string, string[]> = {
+        high: ["transcendent", "a masterclass", "an instant classic", "genre-defining"],
+        mid: ["solid effort", "shows promise", "engaging throughout", "pleasantly surprising"],
+        low: ["uneven", "struggles to find its voice", "a missed opportunity"],
+      };
+      for (let ri = 0; ri < reviewCount; ri++) {
+        const song = reviewCandidates[Math.floor(Math.random() * reviewCandidates.length)];
+        const score = Math.round((Math.random() * 6 + 4) * 10) / 10; // 4.0-10.0
+        const tier = score >= 8 ? "high" : score >= 6 ? "mid" : "low";
+        const adj = reviewAdj[tier][Math.floor(Math.random() * reviewAdj[tier].length)];
+        await supabase.from("pitchfork_reviews").insert({
+          artist_id: song.artist_id,
+          song_id: song.id,
+          score,
+          review_text: `This release is ${adj}. ${score >= 8 ? "Best New Music." : ""}`,
+          reviewer_name: reviewerNames[Math.floor(Math.random() * reviewerNames.length)],
+          turn_number: newTurn,
+        });
       }
     }
   }

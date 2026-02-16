@@ -44,9 +44,10 @@ export default function AppleMusicApp({ profile }: Props) {
   const playSong = (song: any) => setCurrentlyPlaying(song);
 
   return (
-    <div className="min-h-screen bg-[#000] text-[#fff]">
+    <div className="flex flex-col h-[calc(100vh-44px)] bg-[#000] text-[#fff]">
+      <div className="flex-1 overflow-y-auto">
       {section === 'listen' && (
-        <div className="pb-32">
+        <div>
           <div className="p-4 pt-2"><h1 className="text-3xl font-bold">Listen Now</h1></div>
 
           {/* Top Picks */}
@@ -132,7 +133,7 @@ export default function AppleMusicApp({ profile }: Props) {
       )}
 
       {section === 'browse' && (
-        <div className="pb-32">
+        <div>
           <div className="p-4 pt-2"><h1 className="text-3xl font-bold">Browse</h1></div>
           <div className="px-4 flex gap-2 mb-6 overflow-x-auto">
             {['Top Artists', 'New Releases', 'Playlists', 'Music Videos'].map((cat) => (
@@ -162,7 +163,7 @@ export default function AppleMusicApp({ profile }: Props) {
 
       {/* SEARCH */}
       {section === 'search' && (
-        <div className="pb-32">
+        <div>
           <div className="p-4 pt-2"><h1 className="text-3xl font-bold mb-4">Search</h1></div>
           <div className="px-4 mb-4">
             <div className="flex items-center gap-2 bg-[#1c1c1e] rounded-lg px-3 py-2.5">
@@ -215,7 +216,7 @@ export default function AppleMusicApp({ profile }: Props) {
 
       {/* LIBRARY */}
       {section === 'library' && (
-        <div className="pb-32">
+        <div>
           <div className="p-4 pt-2"><h1 className="text-3xl font-bold mb-4">Library</h1></div>
           <div className="px-4">
             {['Recently Added', 'Artists', 'Albums', 'Songs', 'Made for You', 'Downloaded'].map((item) => (
@@ -243,7 +244,7 @@ export default function AppleMusicApp({ profile }: Props) {
 
       {/* ARTIST */}
       {section === 'artist' && (
-        <div className="pb-32">
+        <div>
           <div className="relative h-72 bg-gradient-to-b from-[#ff375f]/40 to-[#000] flex items-end p-6">
             <div className="flex items-end gap-4">
               <div className="w-24 h-24 rounded-2xl bg-[#1c1c1e] overflow-hidden shadow-2xl flex-shrink-0">
@@ -326,8 +327,10 @@ export default function AppleMusicApp({ profile }: Props) {
         </div>
       )}
 
+      </div>{/* end scrollable */}
+
       {/* Bottom nav */}
-      <div className="sticky bottom-0 bg-[#000]/95 backdrop-blur-lg border-t border-[#1c1c1e] flex justify-around py-3 z-30">
+      <div className="flex-shrink-0 bg-[#000]/95 backdrop-blur-lg border-t border-[#1c1c1e] flex justify-around py-3 z-30">
         <button onClick={() => setSection('listen')} className={`flex flex-col items-center gap-1 ${section === 'listen' ? 'text-[#ff375f]' : 'text-[#8e8e93]'}`}>
           <ListMusic className="w-5 h-5" />
           <span className="text-[10px]">Listen Now</span>

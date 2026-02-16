@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/hooks/useProfile';
+import { useGameState } from '@/hooks/useGameState';
 import { formatNumber, formatMoney } from '@/lib/supabase-helpers';
-import { Shield, Trash2, DollarSign, Sprout, BarChart3, Music, Users, TrendingUp, Lock, Eye, EyeOff, Loader2, Search, X } from 'lucide-react';
+import { Shield, Trash2, DollarSign, Sprout, BarChart3, Music, Users, TrendingUp, Lock, Eye, EyeOff, Loader2, Search, X, Clock, Zap, RefreshCw, Hash, Mic2, Award } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function AdminApp({ profile }: Props) {
+  const { gameState, formatTimeLeft } = useGameState();
   const [unlocked, setUnlocked] = useState(false);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -20,6 +22,7 @@ export default function AdminApp({ profile }: Props) {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [boostAmount, setBoostAmount] = useState('100000');
+  const [tab, setTab] = useState<'artists' | 'songs' | 'game' | 'stats'>('artists');
 
   useEffect(() => {
     if (!unlocked) return;
@@ -61,28 +64,21 @@ export default function AdminApp({ profile }: Props) {
       const res = await supabase.functions.invoke('admin-actions', {
         body: { password, action: 'test' },
       });
-      if (res.error) {
-        toast.error('Wrong password');
-        setLoading(false);
-        return;
-      }
-      // Any non-error response means password was accepted
+      if (res.error) { toast.error('Wrong password'); setLoading(false); return; }
       setUnlocked(true);
       toast.success('Admin panel unlocked');
-    } catch {
-      toast.error('Connection error');
-    } finally {
-      setLoading(false);
-    }
+    } catch { toast.error('Connection error'); }
+    finally { setLoading(false); }
   };
 
   const filteredArtists = searchQuery
     ? artists.filter(a => a.artist_name.toLowerCase().includes(searchQuery.toLowerCase()))
     : artists;
 
-  const artistSongs = selectedArtist
-    ? songs.filter(s => s.artist_id === selectedArtist.id)
-    : songs;
+  const artistSongs = selectedArtist ? songs.filter(s => s.artist_id === selectedArtist.id) : [];
+
+  const totalStreams = artists.reduce((sum, a) => sum + a.total_streams, 0);
+  const totalMoney = artists.reduce((sum, a) => sum + a.current_money, 0);
 
   if (!unlocked) {
     return (
@@ -98,25 +94,15 @@ export default function AdminApp({ profile }: Props) {
           <div className="space-y-3">
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#666]" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
-                placeholder="Password"
-                className="w-full bg-[#1a1a1a] border border-[#333] rounded-xl pl-10 pr-10 py-3 text-sm outline-none focus:border-red-500 transition-colors"
-              />
+              <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
+                placeholder="Password" className="w-full bg-[#1a1a1a] border border-[#333] rounded-xl pl-10 pr-10 py-3 text-sm outline-none focus:border-red-500 transition-colors" />
               <button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2">
                 {showPassword ? <EyeOff className="w-4 h-4 text-[#666]" /> : <Eye className="w-4 h-4 text-[#666]" />}
               </button>
             </div>
-            <button
-              onClick={handleUnlock}
-              disabled={loading || !password}
-              className="w-full bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold py-3 rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
-              Unlock
+            <button onClick={handleUnlock} disabled={loading || !password}
+              className="w-full bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold py-3 rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-2">
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />} Unlock
             </button>
           </div>
         </div>
@@ -125,168 +111,229 @@ export default function AdminApp({ profile }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white pb-20">
+    <div className="min-h-screen bg-[#0a0a0a] text-white pb-6">
       {/* Header */}
-      <div className="bg-gradient-to-b from-red-500/20 to-transparent p-4 pb-6">
-        <div className="flex items-center gap-2 mb-1">
-          <Shield className="w-5 h-5 text-red-400" />
-          <h1 className="text-xl font-bold">Admin Panel</h1>
-        </div>
-        <p className="text-xs text-[#888]">Manage artists, streams, and charts</p>
-      </div>
-
-      {/* Search */}
-      <div className="px-4 mb-4">
-        <div className="flex items-center gap-2 bg-[#1a1a1a] rounded-lg px-3 py-2.5">
-          <Search className="w-4 h-4 text-[#666]" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search artists..."
-            className="bg-transparent text-sm text-white placeholder-[#666] outline-none flex-1"
-          />
-          {searchQuery && <button onClick={() => setSearchQuery('')}><X className="w-4 h-4 text-[#666]" /></button>}
+      <div className="bg-gradient-to-b from-red-500/20 to-transparent p-4 pb-3">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Shield className="w-5 h-5 text-red-400" />
+            <h1 className="text-xl font-bold">Admin Panel</h1>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-[#888]">
+            <Clock className="w-3 h-3" />
+            <span>T{gameState?.current_turn ?? 0} · {formatTimeLeft()}</span>
+          </div>
         </div>
       </div>
 
-      {/* Artist list */}
-      <div className="px-4 mb-6">
-        <h2 className="text-sm font-bold text-[#888] mb-3">Artists ({filteredArtists.length})</h2>
-        <div className="space-y-1 max-h-60 overflow-y-auto">
-          {filteredArtists.map((artist) => (
-            <button
-              key={artist.id}
-              onClick={() => { setSelectedArtist(artist); setSelectedSong(null); }}
-              className={`flex items-center gap-3 w-full text-left p-2.5 rounded-lg transition-colors ${
-                selectedArtist?.id === artist.id ? 'bg-red-500/20 border border-red-500/30' : 'bg-[#141414] hover:bg-[#1e1e1e]'
-              }`}
-            >
-              <div className="w-10 h-10 rounded-full bg-[#222] overflow-hidden flex-shrink-0">
-                {artist.avatar_url ? <img src={artist.avatar_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Users className="w-4 h-4 text-[#666]" /></div>}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{artist.artist_name}</p>
-                <p className="text-xs text-[#888]">{formatNumber(artist.total_streams)} streams • {formatMoney(artist.current_money)}</p>
-              </div>
-            </button>
-          ))}
-        </div>
+      {/* Tab bar - responsive for iPad */}
+      <div className="flex gap-1 px-4 mb-4 overflow-x-auto">
+        {(['artists', 'songs', 'game', 'stats'] as const).map(t => (
+          <button key={t} onClick={() => setTab(t)}
+            className={`px-4 py-2 rounded-lg text-xs font-medium capitalize whitespace-nowrap ${tab === t ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-[#141414] text-[#888]'}`}>
+            {t}
+          </button>
+        ))}
       </div>
 
-      {/* Selected artist actions */}
-      {selectedArtist && (
-        <div className="px-4 space-y-4">
-          <div className="bg-[#141414] rounded-xl p-4 border border-[#222]">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-[#222] overflow-hidden flex-shrink-0">
-                {selectedArtist.avatar_url ? <img src={selectedArtist.avatar_url} alt="" className="w-full h-full object-cover" /> : <Users className="w-5 h-5 text-[#666] m-3.5" />}
-              </div>
-              <div>
-                <p className="font-bold">{selectedArtist.artist_name}</p>
-                <p className="text-xs text-[#888]">{formatNumber(selectedArtist.monthly_listeners)} monthly listeners</p>
-              </div>
+      {/* iPad-friendly grid layout */}
+      <div className="px-4">
+        {tab === 'stats' && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <div className="bg-[#141414] rounded-xl p-4 border border-[#222]">
+              <Users className="w-5 h-5 text-blue-400 mb-2" />
+              <p className="text-2xl font-bold">{artists.length}</p>
+              <p className="text-xs text-[#888]">Total Artists</p>
             </div>
-
-            {/* Boost amount */}
-            <div className="mb-4">
-              <label className="text-xs text-[#888] mb-1 block">Boost Amount</label>
-              <input
-                type="number"
-                value={boostAmount}
-                onChange={(e) => setBoostAmount(e.target.value)}
-                className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm outline-none focus:border-red-500"
-              />
+            <div className="bg-[#141414] rounded-xl p-4 border border-[#222]">
+              <Music className="w-5 h-5 text-green-400 mb-2" />
+              <p className="text-2xl font-bold">{songs.length}</p>
+              <p className="text-xs text-[#888]">Total Songs</p>
             </div>
-
-            {/* Action buttons */}
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => callAdmin('boost_listeners', { artist_id: selectedArtist.id, amount: parseInt(boostAmount) })}
-                disabled={loading}
-                className="flex items-center justify-center gap-1.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg py-2.5 text-xs font-medium disabled:opacity-50"
-              >
-                <Users className="w-3.5 h-3.5" /> Boost Listeners
-              </button>
-              <button
-                onClick={() => callAdmin('payola', { artist_id: selectedArtist.id, amount: parseInt(boostAmount) })}
-                disabled={loading}
-                className="flex items-center justify-center gap-1.5 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg py-2.5 text-xs font-medium disabled:opacity-50"
-              >
-                <DollarSign className="w-3.5 h-3.5" /> Payola
-              </button>
-              <button
-                onClick={() => callAdmin('industry_plant', { artist_id: selectedArtist.id })}
-                disabled={loading}
-                className="flex items-center justify-center gap-1.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg py-2.5 text-xs font-medium disabled:opacity-50"
-              >
-                <Sprout className="w-3.5 h-3.5" /> Industry Plant
-              </button>
-              <button
-                onClick={() => {
-                  if (confirm(`Delete ${selectedArtist.artist_name} and all their data?`)) {
-                    callAdmin('delete_artist', { artist_id: selectedArtist.id });
-                  }
-                }}
-                disabled={loading}
-                className="flex items-center justify-center gap-1.5 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg py-2.5 text-xs font-medium disabled:opacity-50"
-              >
-                <Trash2 className="w-3.5 h-3.5" /> Delete Artist
-              </button>
+            <div className="bg-[#141414] rounded-xl p-4 border border-[#222]">
+              <TrendingUp className="w-5 h-5 text-purple-400 mb-2" />
+              <p className="text-2xl font-bold">{formatNumber(totalStreams)}</p>
+              <p className="text-xs text-[#888]">Total Streams</p>
+            </div>
+            <div className="bg-[#141414] rounded-xl p-4 border border-[#222]">
+              <DollarSign className="w-5 h-5 text-emerald-400 mb-2" />
+              <p className="text-2xl font-bold">{formatMoney(totalMoney)}</p>
+              <p className="text-xs text-[#888]">Money in Economy</p>
+            </div>
+            {/* Leaderboard */}
+            <div className="bg-[#141414] rounded-xl p-4 border border-[#222] col-span-2 md:col-span-4">
+              <h3 className="text-sm font-bold mb-3 flex items-center gap-2"><Award className="w-4 h-4 text-yellow-400" /> Top 10 Artists</h3>
+              <div className="space-y-2">
+                {artists.slice(0, 10).map((a, i) => (
+                  <div key={a.id} className="flex items-center gap-3">
+                    <span className={`w-5 text-right text-xs font-bold ${i < 3 ? 'text-yellow-400' : 'text-[#666]'}`}>{i + 1}</span>
+                    <div className="w-8 h-8 rounded-full bg-[#222] overflow-hidden flex-shrink-0">
+                      {a.avatar_url ? <img src={a.avatar_url} alt="" className="w-full h-full object-cover" /> : <Users className="w-3 h-3 text-[#666] m-2.5" />}
+                    </div>
+                    <span className="text-xs font-medium flex-1 truncate">{a.artist_name}</span>
+                    <span className="text-xs text-[#888]">{formatNumber(a.total_streams)}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
+        )}
 
-          {/* Songs for selected artist */}
-          <div className="bg-[#141414] rounded-xl p-4 border border-[#222]">
-            <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
-              <Music className="w-4 h-4 text-red-400" /> Songs by {selectedArtist.artist_name}
-            </h3>
-            {artistSongs.length > 0 ? (
-              <div className="space-y-1">
-                {artistSongs.map((song: any) => (
-                  <button
-                    key={song.id}
-                    onClick={() => setSelectedSong(song)}
-                    className={`flex items-center gap-3 w-full text-left p-2.5 rounded-lg transition-colors ${
-                      selectedSong?.id === song.id ? 'bg-orange-500/20 border border-orange-500/30' : 'bg-[#0a0a0a] hover:bg-[#1e1e1e]'
-                    }`}
-                  >
-                    <div className="w-8 h-8 rounded bg-[#222] overflow-hidden flex-shrink-0">
-                      {song.cover_url ? <img src={song.cover_url} alt="" className="w-full h-full object-cover" /> : <Music className="w-3 h-3 text-[#666] m-2.5" />}
+        {tab === 'game' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="bg-[#141414] rounded-xl p-4 border border-[#222]">
+              <h3 className="text-sm font-bold mb-3 flex items-center gap-2"><Clock className="w-4 h-4 text-blue-400" /> Game State</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between"><span className="text-[#888]">Current Turn</span><span className="font-bold">{gameState?.current_turn ?? 0}</span></div>
+                <div className="flex justify-between"><span className="text-[#888]">Turn Duration</span><span className="font-bold">{gameState?.turn_duration_minutes ?? 0} min</span></div>
+                <div className="flex justify-between"><span className="text-[#888]">Next Turn</span><span className="font-mono text-blue-400">{formatTimeLeft()}</span></div>
+              </div>
+            </div>
+            <div className="bg-[#141414] rounded-xl p-4 border border-[#222]">
+              <h3 className="text-sm font-bold mb-3 flex items-center gap-2"><Zap className="w-4 h-4 text-yellow-400" /> Quick Actions</h3>
+              <div className="space-y-2">
+                <button onClick={() => {
+                  fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-turn`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` }
+                  }).then(() => toast.success('Turn processing triggered!')).catch(() => toast.error('Failed'));
+                }} className="w-full flex items-center justify-center gap-2 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg py-2.5 text-xs font-medium">
+                  <RefreshCw className="w-3.5 h-3.5" /> Force Process Turn
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {tab === 'artists' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Artist list panel */}
+            <div>
+              <div className="flex items-center gap-2 bg-[#1a1a1a] rounded-lg px-3 py-2.5 mb-3">
+                <Search className="w-4 h-4 text-[#666]" />
+                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search artists..."
+                  className="bg-transparent text-sm text-white placeholder-[#666] outline-none flex-1" />
+                {searchQuery && <button onClick={() => setSearchQuery('')}><X className="w-4 h-4 text-[#666]" /></button>}
+              </div>
+              <div className="space-y-1 max-h-[400px] overflow-y-auto">
+                {filteredArtists.map((artist) => (
+                  <button key={artist.id} onClick={() => { setSelectedArtist(artist); setSelectedSong(null); }}
+                    className={`flex items-center gap-3 w-full text-left p-2.5 rounded-lg transition-colors ${selectedArtist?.id === artist.id ? 'bg-red-500/20 border border-red-500/30' : 'bg-[#141414] hover:bg-[#1e1e1e]'}`}>
+                    <div className="w-10 h-10 rounded-full bg-[#222] overflow-hidden flex-shrink-0">
+                      {artist.avatar_url ? <img src={artist.avatar_url} alt="" className="w-full h-full object-cover" /> : <Users className="w-4 h-4 text-[#666] m-3" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium truncate">{song.title}</p>
-                      <p className="text-[10px] text-[#888]">{formatNumber(song.streams)} streams</p>
+                      <p className="text-sm font-medium truncate">{artist.artist_name}</p>
+                      <p className="text-xs text-[#888]">{formatNumber(artist.total_streams)} streams · {formatMoney(artist.current_money)}</p>
                     </div>
                   </button>
                 ))}
               </div>
-            ) : (
-              <p className="text-xs text-[#888]">No songs</p>
-            )}
+            </div>
 
-            {/* Song actions */}
-            {selectedSong && (
-              <div className="mt-3 pt-3 border-t border-[#222] grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => callAdmin('boost_streams', { song_id: selectedSong.id, amount: parseInt(boostAmount) })}
-                  disabled={loading}
-                  className="flex items-center justify-center gap-1.5 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-lg py-2.5 text-xs font-medium disabled:opacity-50"
-                >
-                  <TrendingUp className="w-3.5 h-3.5" /> Boost Streams
-                </button>
-                <button
-                  onClick={() => callAdmin('chart_placement', { song_id: selectedSong.id, amount: 1 })}
-                  disabled={loading}
-                  className="flex items-center justify-center gap-1.5 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-lg py-2.5 text-xs font-medium disabled:opacity-50"
-                >
-                  <BarChart3 className="w-3.5 h-3.5" /> #1 on Charts
-                </button>
-              </div>
-            )}
+            {/* Artist actions panel */}
+            <div>
+              {selectedArtist ? (
+                <div className="space-y-4">
+                  <div className="bg-[#141414] rounded-xl p-4 border border-[#222]">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-14 h-14 rounded-full bg-[#222] overflow-hidden flex-shrink-0">
+                        {selectedArtist.avatar_url ? <img src={selectedArtist.avatar_url} alt="" className="w-full h-full object-cover" /> : <Users className="w-6 h-6 text-[#666] m-4" />}
+                      </div>
+                      <div>
+                        <p className="font-bold text-lg">{selectedArtist.artist_name}</p>
+                        <p className="text-xs text-[#888]">{formatNumber(selectedArtist.monthly_listeners)} monthly · {formatNumber(selectedArtist.spotify_followers)} Spotify · {formatNumber(selectedArtist.youtube_subscribers)} YT</p>
+                      </div>
+                    </div>
+                    <div className="mb-4">
+                      <label className="text-xs text-[#888] mb-1 block">Boost Amount</label>
+                      <input type="number" value={boostAmount} onChange={(e) => setBoostAmount(e.target.value)}
+                        className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm outline-none focus:border-red-500" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button onClick={() => callAdmin('boost_listeners', { artist_id: selectedArtist.id, amount: parseInt(boostAmount) })} disabled={loading}
+                        className="flex items-center justify-center gap-1.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg py-2.5 text-xs font-medium disabled:opacity-50">
+                        <Users className="w-3.5 h-3.5" /> Boost Listeners
+                      </button>
+                      <button onClick={() => callAdmin('payola', { artist_id: selectedArtist.id, amount: parseInt(boostAmount) })} disabled={loading}
+                        className="flex items-center justify-center gap-1.5 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg py-2.5 text-xs font-medium disabled:opacity-50">
+                        <DollarSign className="w-3.5 h-3.5" /> Payola
+                      </button>
+                      <button onClick={() => callAdmin('industry_plant', { artist_id: selectedArtist.id })} disabled={loading}
+                        className="flex items-center justify-center gap-1.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg py-2.5 text-xs font-medium disabled:opacity-50">
+                        <Sprout className="w-3.5 h-3.5" /> Industry Plant
+                      </button>
+                      <button onClick={() => { if (confirm(`Delete ${selectedArtist.artist_name} and all their data?`)) callAdmin('delete_artist', { artist_id: selectedArtist.id }); }} disabled={loading}
+                        className="flex items-center justify-center gap-1.5 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg py-2.5 text-xs font-medium disabled:opacity-50">
+                        <Trash2 className="w-3.5 h-3.5" /> Delete Artist
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Artist's songs */}
+                  <div className="bg-[#141414] rounded-xl p-4 border border-[#222]">
+                    <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
+                      <Mic2 className="w-4 h-4 text-red-400" /> Songs ({artistSongs.length})
+                    </h3>
+                    <div className="space-y-1 max-h-60 overflow-y-auto">
+                      {artistSongs.map((song: any) => (
+                        <button key={song.id} onClick={() => setSelectedSong(song)}
+                          className={`flex items-center gap-3 w-full text-left p-2 rounded-lg ${selectedSong?.id === song.id ? 'bg-orange-500/20 border border-orange-500/30' : 'bg-[#0a0a0a] hover:bg-[#1e1e1e]'}`}>
+                          <div className="w-8 h-8 rounded bg-[#222] overflow-hidden flex-shrink-0">
+                            {song.cover_url ? <img src={song.cover_url} alt="" className="w-full h-full object-cover" /> : <Music className="w-3 h-3 text-[#666] m-2.5" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium truncate">{song.title}</p>
+                            <p className="text-[10px] text-[#888]">{formatNumber(song.streams)} streams</p>
+                          </div>
+                        </button>
+                      ))}
+                      {artistSongs.length === 0 && <p className="text-xs text-[#888]">No songs</p>}
+                    </div>
+                    {selectedSong && (
+                      <div className="mt-3 pt-3 border-t border-[#222] grid grid-cols-2 gap-2">
+                        <button onClick={() => callAdmin('boost_streams', { song_id: selectedSong.id, amount: parseInt(boostAmount) })} disabled={loading}
+                          className="flex items-center justify-center gap-1.5 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-lg py-2.5 text-xs font-medium disabled:opacity-50">
+                          <TrendingUp className="w-3.5 h-3.5" /> Boost Streams
+                        </button>
+                        <button onClick={() => callAdmin('chart_placement', { song_id: selectedSong.id, amount: 1 })} disabled={loading}
+                          className="flex items-center justify-center gap-1.5 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-lg py-2.5 text-xs font-medium disabled:opacity-50">
+                          <BarChart3 className="w-3.5 h-3.5" /> #1 on Charts
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-[#141414] rounded-xl p-8 border border-[#222] text-center">
+                  <Users className="w-8 h-8 text-[#444] mx-auto mb-3" />
+                  <p className="text-sm text-[#888]">Select an artist to manage</p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {tab === 'songs' && (
+          <div>
+            <h3 className="text-sm font-bold text-[#888] mb-3">All Songs ({songs.length})</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[500px] overflow-y-auto">
+              {songs.map((song: any) => (
+                <div key={song.id} className="flex items-center gap-3 bg-[#141414] rounded-lg p-3">
+                  <div className="w-10 h-10 rounded bg-[#222] overflow-hidden flex-shrink-0">
+                    {song.cover_url ? <img src={song.cover_url} alt="" className="w-full h-full object-cover" /> : <Music className="w-4 h-4 text-[#666] m-3" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate">{song.title}</p>
+                    <p className="text-[10px] text-[#888]">{song.profiles?.artist_name || 'Unknown'} · {formatNumber(song.streams)} streams</p>
+                  </div>
+                  <button onClick={() => { setSelectedArtist(artists.find(a => a.id === song.artist_id) || null); setSelectedSong(song); setTab('artists'); }}
+                    className="text-[10px] text-red-400 hover:underline">Manage</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {loading && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 pointer-events-none">

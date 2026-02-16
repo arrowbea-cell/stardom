@@ -21,14 +21,15 @@ import RecordLabelApp from '@/components/apps/RecordLabelApp';
 import BeefApp from '@/components/apps/BeefApp';
 import FanMailApp from '@/components/apps/FanMailApp';
 import RadioApp from '@/components/apps/RadioApp';
+import PitchforkApp from '@/components/apps/PitchforkApp';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Mic2, Shield, Music, Handshake, Landmark, Trophy, ShoppingBag, Newspaper, Ticket, Building2, Swords, Mail, Radio } from 'lucide-react';
+import { ChevronLeft, Mic2, Shield, Music, Handshake, Landmark, Trophy, ShoppingBag, Newspaper, Ticket, Building2, Swords, Mail, Radio, BookOpen, Disc3 } from 'lucide-react';
 
 interface Props {
   profile: Profile;
 }
 
-type AppType = 'spotify' | 'apple-music' | 'youtube' | 'youtube-music' | 'x' | 'studio' | 'admin' | 'collab' | 'bank' | 'awards' | 'merch' | 'news' | 'concert' | 'label' | 'beef' | 'fan-mail' | 'radio' | null;
+type AppType = 'spotify' | 'apple-music' | 'youtube' | 'youtube-music' | 'x' | 'studio' | 'admin' | 'collab' | 'bank' | 'awards' | 'merch' | 'news' | 'concert' | 'label' | 'beef' | 'fan-mail' | 'radio' | 'pitchfork' | null;
 
 const apps = [
   { id: 'spotify' as const, name: 'Spotify', logo: spotifyLogo, bgClass: 'bg-[#121212]' },
@@ -47,6 +48,7 @@ const apps = [
   { id: 'fan-mail' as const, name: 'Fan Mail', logo: null, bgClass: 'bg-gradient-to-br from-[#f472b6] to-[#db2777]' },
   { id: 'awards' as const, name: 'Awards', logo: null, bgClass: 'bg-gradient-to-br from-[#f59e0b] to-[#d97706]' },
   { id: 'news' as const, name: 'News', logo: null, bgClass: 'bg-gradient-to-br from-[#06b6d4] to-[#0891b2]' },
+  { id: 'pitchfork' as const, name: 'Pitchfork', logo: null, bgClass: 'bg-gradient-to-br from-[#222] to-[#000]' },
   { id: 'admin' as const, name: 'Admin', logo: null, bgClass: 'bg-gradient-to-br from-[#ef4444] to-[#f97316]' },
 ];
 
@@ -64,6 +66,7 @@ const APP_ICONS: Record<string, any> = {
   beef: Swords,
   'fan-mail': Mail,
   radio: Radio,
+  pitchfork: BookOpen,
 };
 
 export default function AppsTab({ profile }: Props) {
@@ -102,6 +105,7 @@ export default function AppsTab({ profile }: Props) {
             {openApp === 'beef' && <BeefApp profile={profile} />}
             {openApp === 'fan-mail' && <FanMailApp profile={profile} />}
             {openApp === 'radio' && <RadioApp profile={profile} />}
+            {openApp === 'pitchfork' && <PitchforkApp profile={profile} />}
             {openApp === 'admin' && <AdminApp profile={profile} />}
           </div>
         </motion.div>

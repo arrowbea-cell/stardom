@@ -176,10 +176,11 @@ export default function XApp({ profile }: Props) {
   );
 
   return (
-    <div className="min-h-screen bg-[#000] text-[#e7e9ea]">
+    <div className="flex flex-col h-[calc(100vh-44px)] bg-[#000] text-[#e7e9ea]">
+      <div className="flex-1 overflow-y-auto">
       {/* THREAD VIEW */}
       {section === 'thread' && threadArtist && (
-        <div className="pb-20">
+        <div>
           <div className="flex items-center gap-4 px-4 py-3 border-b border-[#2f3336]">
             <button onClick={() => setSection('feed')}><ArrowLeft className="w-5 h-5" /></button>
             <h2 className="font-bold text-lg">Post</h2>
@@ -253,7 +254,7 @@ export default function XApp({ profile }: Props) {
 
       {/* FEED */}
       {section === 'feed' && (
-        <div className="pb-20">
+        <div>
           <div className="border-b border-[#2f3336]">
             <div className="flex items-center justify-between px-4 py-3">
               <div className="w-8 h-8 rounded-full bg-[#16181c] overflow-hidden">
@@ -298,7 +299,7 @@ export default function XApp({ profile }: Props) {
 
       {/* SEARCH */}
       {section === 'search' && (
-        <div className="pb-20">
+        <div>
           <div className="px-4 pt-4 pb-2">
             <div className="flex items-center gap-2 bg-[#202327] rounded-full px-4 py-2.5">
               <Search className="w-4 h-4 text-[#71767b]" />
@@ -454,8 +455,10 @@ export default function XApp({ profile }: Props) {
         </div>
       )}
 
+      </div>{/* end scrollable */}
+
       {/* Bottom nav */}
-      <div className="sticky bottom-0 bg-[#000] border-t border-[#2f3336] flex justify-around py-3 z-30">
+      <div className="flex-shrink-0 bg-[#000] border-t border-[#2f3336] flex justify-around py-3 z-30">
         <button onClick={() => setSection('feed')} className={section === 'feed' ? 'text-white' : 'text-[#71767b]'}>
           <Home className={`w-6 h-6 ${section === 'feed' ? 'fill-white' : ''}`} />
         </button>
