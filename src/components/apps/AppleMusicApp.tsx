@@ -311,7 +311,7 @@ export default function AppleMusicApp({ profile }: Props) {
 
       {/* Now Playing mini bar */}
       {currentlyPlaying && (
-        <div className="fixed bottom-[56px] left-0 right-0 bg-[#1c1c1e]/95 backdrop-blur-lg px-4 py-2 z-40">
+        <div className="sticky bottom-[52px] bg-[#1c1c1e]/95 backdrop-blur-lg px-4 py-2 z-30">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-[#2c2c2e] overflow-hidden flex-shrink-0">
               {currentlyPlaying.cover_url ? <img src={currentlyPlaying.cover_url} alt="" className="w-full h-full object-cover" /> : <Music className="w-4 h-4 text-[#8e8e93] m-3" />}
@@ -327,7 +327,7 @@ export default function AppleMusicApp({ profile }: Props) {
       )}
 
       {/* Bottom nav */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#000]/95 backdrop-blur-lg border-t border-[#1c1c1e] flex justify-around py-3 z-50">
+      <div className="sticky bottom-0 bg-[#000]/95 backdrop-blur-lg border-t border-[#1c1c1e] flex justify-around py-3 z-30">
         <button onClick={() => setSection('listen')} className={`flex flex-col items-center gap-1 ${section === 'listen' ? 'text-[#ff375f]' : 'text-[#8e8e93]'}`}>
           <ListMusic className="w-5 h-5" />
           <span className="text-[10px]">Listen Now</span>

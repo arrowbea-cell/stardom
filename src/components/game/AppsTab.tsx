@@ -13,14 +13,18 @@ import StudioApp from '@/components/apps/StudioApp';
 import AdminApp from '@/components/apps/AdminApp';
 import CollabApp from '@/components/apps/CollabApp';
 import BankApp from '@/components/apps/BankApp';
+import MusicVideoApp from '@/components/apps/MusicVideoApp';
+import AwardsApp from '@/components/apps/AwardsApp';
+import MerchApp from '@/components/apps/MerchApp';
+import NewsApp from '@/components/apps/NewsApp';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Mic2, Shield, Music, Handshake, Landmark } from 'lucide-react';
+import { ChevronLeft, Mic2, Shield, Music, Handshake, Landmark, Clapperboard, Trophy, ShoppingBag, Newspaper } from 'lucide-react';
 
 interface Props {
   profile: Profile;
 }
 
-type AppType = 'spotify' | 'apple-music' | 'youtube' | 'youtube-music' | 'x' | 'studio' | 'admin' | 'collab' | 'bank' | null;
+type AppType = 'spotify' | 'apple-music' | 'youtube' | 'youtube-music' | 'x' | 'studio' | 'admin' | 'collab' | 'bank' | 'music-video' | 'awards' | 'merch' | 'news' | null;
 
 const apps = [
   { id: 'spotify' as const, name: 'Spotify', logo: spotifyLogo, bgClass: 'bg-[#121212]' },
@@ -29,8 +33,12 @@ const apps = [
   { id: 'youtube-music' as const, name: 'YT Music', logo: null, bgClass: 'bg-gradient-to-br from-[#ff0000] to-[#cc0000]' },
   { id: 'x' as const, name: 'X', logo: xLogo, bgClass: 'bg-[#000000]' },
   { id: 'studio' as const, name: 'Studio', logo: null, bgClass: 'bg-gradient-to-br from-[#1db954] to-[#148a3c]' },
+  { id: 'music-video' as const, name: 'Videos', logo: null, bgClass: 'bg-gradient-to-br from-[#dc2626] to-[#991b1b]' },
   { id: 'collab' as const, name: 'Collabs', logo: null, bgClass: 'bg-gradient-to-br from-[#8b5cf6] to-[#6d28d9]' },
   { id: 'bank' as const, name: 'Bank', logo: null, bgClass: 'bg-gradient-to-br from-[#0ea5e9] to-[#0369a1]' },
+  { id: 'merch' as const, name: 'Merch', logo: null, bgClass: 'bg-gradient-to-br from-[#ec4899] to-[#be185d]' },
+  { id: 'awards' as const, name: 'Awards', logo: null, bgClass: 'bg-gradient-to-br from-[#f59e0b] to-[#d97706]' },
+  { id: 'news' as const, name: 'News', logo: null, bgClass: 'bg-gradient-to-br from-[#0ea5e9] to-[#0284c7]' },
   { id: 'admin' as const, name: 'Admin', logo: null, bgClass: 'bg-gradient-to-br from-[#ef4444] to-[#f97316]' },
 ];
 
@@ -40,6 +48,10 @@ const APP_ICONS: Record<string, any> = {
   admin: Shield,
   collab: Handshake,
   bank: Landmark,
+  'music-video': Clapperboard,
+  awards: Trophy,
+  merch: ShoppingBag,
+  news: Newspaper,
 };
 
 export default function AppsTab({ profile }: Props) {
@@ -53,7 +65,7 @@ export default function AppsTab({ profile }: Props) {
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 25 }}
-          className="min-h-full pb-24"
+          className="min-h-full"
         >
           <button
             onClick={() => setOpenApp(null)}
@@ -61,15 +73,21 @@ export default function AppsTab({ profile }: Props) {
           >
             <ChevronLeft className="w-4 h-4" /> Back
           </button>
-          {openApp === 'spotify' && <SpotifyApp profile={profile} />}
-          {openApp === 'apple-music' && <AppleMusicApp profile={profile} />}
-          {openApp === 'youtube' && <YouTubeApp profile={profile} />}
-          {openApp === 'youtube-music' && <YouTubeMusicApp profile={profile} />}
-          {openApp === 'x' && <XApp profile={profile} />}
-          {openApp === 'studio' && <StudioApp profile={profile} />}
-          {openApp === 'collab' && <CollabApp profile={profile} />}
-          {openApp === 'bank' && <BankApp profile={profile} />}
-          {openApp === 'admin' && <AdminApp profile={profile} />}
+          <div className="pb-4">
+            {openApp === 'spotify' && <SpotifyApp profile={profile} />}
+            {openApp === 'apple-music' && <AppleMusicApp profile={profile} />}
+            {openApp === 'youtube' && <YouTubeApp profile={profile} />}
+            {openApp === 'youtube-music' && <YouTubeMusicApp profile={profile} />}
+            {openApp === 'x' && <XApp profile={profile} />}
+            {openApp === 'studio' && <StudioApp profile={profile} />}
+            {openApp === 'collab' && <CollabApp profile={profile} />}
+            {openApp === 'bank' && <BankApp profile={profile} />}
+            {openApp === 'music-video' && <MusicVideoApp profile={profile} />}
+            {openApp === 'awards' && <AwardsApp profile={profile} />}
+            {openApp === 'merch' && <MerchApp profile={profile} />}
+            {openApp === 'news' && <NewsApp profile={profile} />}
+            {openApp === 'admin' && <AdminApp profile={profile} />}
+          </div>
         </motion.div>
       </AnimatePresence>
     );

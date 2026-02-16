@@ -124,6 +124,44 @@ export type Database = {
           },
         ]
       }
+      awards: {
+        Row: {
+          artist_id: string
+          award_name: string
+          category: string
+          created_at: string
+          id: string
+          turn_number: number
+          won: boolean
+        }
+        Insert: {
+          artist_id: string
+          award_name: string
+          category: string
+          created_at?: string
+          id?: string
+          turn_number?: number
+          won?: boolean
+        }
+        Update: {
+          artist_id?: string
+          award_name?: string
+          category?: string
+          created_at?: string
+          id?: string
+          turn_number?: number
+          won?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "awards_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_transactions: {
         Row: {
           amount: number
@@ -259,6 +297,41 @@ export type Database = {
           },
         ]
       }
+      fan_mail: {
+        Row: {
+          artist_id: string
+          created_at: string
+          fan_name: string
+          id: string
+          message: string
+          responded: boolean
+        }
+        Insert: {
+          artist_id: string
+          created_at?: string
+          fan_name: string
+          id?: string
+          message: string
+          responded?: boolean
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string
+          fan_name?: string
+          id?: string
+          message?: string
+          responded?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fan_mail_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_state: {
         Row: {
           current_turn: number
@@ -309,6 +382,95 @@ export type Database = {
           rarity?: string
         }
         Relationships: []
+      }
+      merch_items: {
+        Row: {
+          artist_id: string
+          category: string
+          created_at: string
+          emoji: string
+          id: string
+          name: string
+          price: number
+          sales: number
+        }
+        Insert: {
+          artist_id: string
+          category?: string
+          created_at?: string
+          emoji?: string
+          id?: string
+          name: string
+          price?: number
+          sales?: number
+        }
+        Update: {
+          artist_id?: string
+          category?: string
+          created_at?: string
+          emoji?: string
+          id?: string
+          name?: string
+          price?: number
+          sales?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merch_items_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      music_videos: {
+        Row: {
+          artist_id: string
+          budget: string
+          cost: number
+          created_at: string
+          id: string
+          song_id: string
+          views: number
+          youtube_boost: number
+        }
+        Insert: {
+          artist_id: string
+          budget?: string
+          cost?: number
+          created_at?: string
+          id?: string
+          song_id: string
+          views?: number
+          youtube_boost?: number
+        }
+        Update: {
+          artist_id?: string
+          budget?: string
+          cost?: number
+          created_at?: string
+          id?: string
+          song_id?: string
+          views?: number
+          youtube_boost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "music_videos_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "music_videos_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       post_likes: {
         Row: {
