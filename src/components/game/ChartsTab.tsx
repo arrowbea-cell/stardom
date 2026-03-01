@@ -2,17 +2,22 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { formatNumber } from '@/lib/supabase-helpers';
 import { Profile } from '@/hooks/useProfile';
-import { BarChart3, TrendingUp, TrendingDown, Minus, Music, Radio, Flame, Users, Crown, ChevronUp, ChevronDown, Trophy, Disc3 } from 'lucide-react';
+import { BarChart3, Music, Radio, Users, Crown, ChevronUp, ChevronDown, Minus, Disc3, Flame, Headphones, Mic2, Guitar, Waves, Zap, Globe } from 'lucide-react';
 
-type ChartType = 'hot_100_daily' | 'hot_100_weekly' | 'daily_radio' | 'weekly_radio' | 'monthly_listeners' | 'top_songs';
+type ChartType = 'hot_100_daily' | 'hot_100_weekly' | 'daily_radio' | 'weekly_radio' | 'monthly_listeners' | 'top_songs' | 'hip_hop' | 'pop' | 'rnb' | 'rock' | 'latin' | 'global';
 
-const CHART_CONFIGS: { type: ChartType; label: string; icon: any; unit: string; color: string }[] = [
-  { type: 'hot_100_daily', label: 'Hot 100 Daily', icon: Flame, unit: 'streams', color: 'from-orange-500 to-red-500' },
-  { type: 'hot_100_weekly', label: 'Hot 100 Weekly', icon: Flame, unit: 'streams', color: 'from-red-500 to-pink-500' },
-  { type: 'top_songs', label: 'Top Songs', icon: Crown, unit: 'streams', color: 'from-yellow-500 to-amber-500' },
-  { type: 'daily_radio', label: 'Daily Radio', icon: Radio, unit: 'spins', color: 'from-blue-500 to-cyan-500' },
-  { type: 'weekly_radio', label: 'Weekly Radio', icon: Radio, unit: 'spins', color: 'from-indigo-500 to-blue-500' },
-  { type: 'monthly_listeners', label: 'Monthly Listeners', icon: Users, unit: 'listeners', color: 'from-green-500 to-emerald-500' },
+const CHART_CONFIGS: { type: ChartType; label: string; icon: any; unit: string; genre?: boolean }[] = [
+  { type: 'hot_100_daily', label: 'Hot 100', icon: Flame, unit: 'streams' },
+  { type: 'hot_100_weekly', label: 'Weekly', icon: Crown, unit: 'streams' },
+  { type: 'top_songs', label: 'Top Songs', icon: Music, unit: 'streams' },
+  { type: 'daily_radio', label: 'Radio', icon: Radio, unit: 'spins' },
+  { type: 'monthly_listeners', label: 'Listeners', icon: Users, unit: 'listeners' },
+  { type: 'hip_hop', label: 'Hip-Hop', icon: Mic2, unit: 'streams', genre: true },
+  { type: 'pop', label: 'Pop', icon: Zap, unit: 'streams', genre: true },
+  { type: 'rnb', label: 'R&B', icon: Waves, unit: 'streams', genre: true },
+  { type: 'rock', label: 'Rock', icon: Guitar, unit: 'streams', genre: true },
+  { type: 'latin', label: 'Latin', icon: Headphones, unit: 'streams', genre: true },
+  { type: 'global', label: 'Global', icon: Globe, unit: 'streams', genre: true },
 ];
 
 interface ChartEntry {
@@ -49,6 +54,14 @@ export default function ChartsTab() {
   }, []);
 
   useEffect(() => {
+    const config = CHART_CONFIGS.find(c => c.type === chartType);
+    if (config?.genre) {
+      // Genre charts use fallback data filtered by genre
+      setChartData([]);
+      setPrevChartData([]);
+      return;
+    }
+
     const fetchChartData = async () => {
       const { data: latestEntry } = await supabase
         .from('charts').select('turn_number').eq('chart_type', chartType)
@@ -75,10 +88,10 @@ export default function ChartsTab() {
 
   const config = CHART_CONFIGS.find(c => c.type === chartType)!;
   const isArtistChart = chartType === 'monthly_listeners';
+  const isGenreChart = config.genre;
   const displayData = chartData.length > 0 ? chartData : [];
   const showCount = expanded ? displayData.length : Math.min(20, displayData.length);
 
-  // Calculate position change
   const getMovement = (entry: ChartEntry) => {
     const key = isArtistChart ? entry.artist_id : entry.song_id;
     const prev = prevChartData.find(p => isArtistChart ? p.artist_id === key : p.song_id === key);
@@ -89,50 +102,76 @@ export default function ChartsTab() {
     return { type: 'same' as const, diff: 0 };
   };
 
-  // Fallback data
+  // Genre charts show filtered songs by genre name matching
+  const genreFilteredSongs = isGenreChart
+    ? songs.filter((s: any) => {
+        const artistGenre = (s.profiles?.genre || 'Pop').toLowerCase();
+        const target = chartType === 'rnb' ? 'r&b' : chartType;
+        return artistGenre.includes(target) || (chartType === 'global');
+      }).slice(0, 20)
+    : [];
+
   const fallbackArtists = isArtistChart ? artists : [];
-  const fallbackSongs = !isArtistChart ? songs : [];
-  const hasFallback = displayData.length === 0 && (fallbackArtists.length > 0 || fallbackSongs.length > 0);
+  const fallbackSongs = !isArtistChart && !isGenreChart ? songs : [];
+  const hasFallback = displayData.length === 0 && (fallbackArtists.length > 0 || fallbackSongs.length > 0 || genreFilteredSongs.length > 0);
+
+  const mainCharts = CHART_CONFIGS.filter(c => !c.genre);
+  const genreCharts = CHART_CONFIGS.filter(c => c.genre);
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-3">
       {/* Header */}
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-primary" />
-          <h2 className="font-display text-xl font-bold">Charts</h2>
+          <BarChart3 className="w-4 h-4 text-muted-foreground hollow-icon" strokeWidth={1.5} />
+          <h2 className="font-display text-sm font-bold uppercase tracking-wider">Charts</h2>
         </div>
-        <span className="text-xs text-muted-foreground">Turn {currentTurn}</span>
+        <span className="text-[10px] text-muted-foreground mono">Turn {currentTurn}</span>
       </div>
 
-      {/* Chart type selector */}
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-        {CHART_CONFIGS.map(c => {
+      {/* Main chart types */}
+      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+        {mainCharts.map(c => {
           const Icon = c.icon;
           return (
             <button key={c.type} onClick={() => setChartType(c.type)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded text-[10px] font-medium transition-all whitespace-nowrap border ${
                 chartType === c.type
-                  ? `bg-gradient-to-r ${c.color} text-white shadow-lg`
-                  : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
+                  ? 'border-foreground/40 text-foreground bg-foreground/5'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}>
-              <Icon className="w-3.5 h-3.5" />{c.label}
+              <Icon className="w-3 h-3 hollow-icon" strokeWidth={1.5} />{c.label}
             </button>
           );
         })}
       </div>
 
-      {/* Chart header bar */}
-      {displayData.length > 0 && (
-        <div className="flex items-center justify-between text-[10px] text-muted-foreground px-2 uppercase tracking-wider">
-          <span>#</span>
-          <span className="flex-1 ml-14">{isArtistChart ? 'Artist' : 'Title'}</span>
-          <span>{config.unit}</span>
-        </div>
-      )}
+      {/* Genre charts */}
+      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+        {genreCharts.map(c => {
+          const Icon = c.icon;
+          return (
+            <button key={c.type} onClick={() => setChartType(c.type)}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded text-[10px] font-medium transition-all whitespace-nowrap border ${
+                chartType === c.type
+                  ? 'border-foreground/40 text-foreground bg-foreground/5'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}>
+              <Icon className="w-3 h-3 hollow-icon" strokeWidth={1.5} />{c.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Chart header */}
+      <div className="flex items-center justify-between text-[9px] text-muted-foreground px-1 uppercase tracking-widest mono">
+        <span>#</span>
+        <span className="flex-1 ml-14">{isArtistChart ? 'Artist' : 'Title'}</span>
+        <span>{config.unit}</span>
+      </div>
 
       {/* Chart entries */}
-      <div className="space-y-1.5">
+      <div className="space-y-1">
         {displayData.length > 0 ? (
           <>
             {displayData.slice(0, showCount).map((entry, i) => {
@@ -146,125 +185,123 @@ export default function ChartsTab() {
               const isTop3 = pos <= 3;
 
               return (
-                <div key={entry.id} className={`rounded-xl transition-all ${isTop3 ? 'bg-gradient-to-r from-[hsl(var(--primary)/0.1)] to-transparent border border-primary/20 p-3' : 'glass-card p-3'}`}>
-                  <div className="flex items-center gap-3">
-                    {/* Position */}
-                    <div className="w-8 text-center flex-shrink-0">
-                      <span className={`text-lg font-display font-black ${isTop3 ? 'text-primary' : 'text-muted-foreground'}`}>{pos}</span>
-                    </div>
+                <div key={entry.id} className={`rounded-lg transition-all p-2.5 ${isTop3 ? 'bg-foreground/[0.03] border border-foreground/10' : 'glass-card'}`}>
+                  <div className="flex items-center gap-2.5">
+                    <span className={`w-6 text-center mono text-sm font-bold ${isTop3 ? 'text-foreground' : 'text-muted-foreground'}`}>{pos}</span>
 
-                    {/* Movement indicator */}
-                    <div className="w-5 flex-shrink-0 text-center">
-                      {movement.type === 'up' && (
-                        <div className="flex items-center justify-center text-green-400" title={`Up ${movement.diff}`}>
-                          <ChevronUp className="w-3.5 h-3.5" />
-                          <span className="text-[9px] font-bold">{movement.diff}</span>
-                        </div>
-                      )}
-                      {movement.type === 'down' && (
-                        <div className="flex items-center justify-center text-red-400" title={`Down ${movement.diff}`}>
-                          <ChevronDown className="w-3.5 h-3.5" />
-                          <span className="text-[9px] font-bold">{movement.diff}</span>
-                        </div>
-                      )}
-                      {movement.type === 'same' && <Minus className="w-3 h-3 text-muted-foreground mx-auto" />}
-                      {movement.type === 'new' && <span className="text-[9px] font-bold text-blue-400">NEW</span>}
+                    {/* Movement */}
+                    <div className="w-4 flex-shrink-0 text-center">
+                      {movement.type === 'up' && <ChevronUp className="w-3 h-3 text-foreground/70 mx-auto" />}
+                      {movement.type === 'down' && <ChevronDown className="w-3 h-3 text-muted-foreground/50 mx-auto" />}
+                      {movement.type === 'same' && <Minus className="w-2.5 h-2.5 text-muted-foreground/30 mx-auto" />}
+                      {movement.type === 'new' && <span className="text-[8px] font-bold text-foreground/60 mono">NEW</span>}
                     </div>
 
                     {/* Image */}
-                    <div className={`w-10 h-10 ${isArtist ? 'rounded-full' : 'rounded'} bg-secondary overflow-hidden flex-shrink-0`}>
+                    <div className={`w-8 h-8 ${isArtist ? 'rounded-full' : 'rounded'} bg-muted overflow-hidden flex-shrink-0`}>
                       {imageUrl ? <img src={imageUrl} alt="" className="w-full h-full object-cover" /> : (
-                        <div className="w-full h-full flex items-center justify-center"><Music className="w-4 h-4 text-muted-foreground" /></div>
+                        <div className="w-full h-full flex items-center justify-center"><Music className="w-3 h-3 text-muted-foreground hollow-icon" strokeWidth={1.5} /></div>
                       )}
                     </div>
 
-                    {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-semibold truncate ${isTop3 ? 'text-foreground' : ''}`}>{name}</p>
-                      {subtitle && <p className="text-xs text-muted-foreground truncate">{subtitle}</p>}
+                      <p className="text-xs font-medium truncate">{name}</p>
+                      {subtitle && <p className="text-[10px] text-muted-foreground truncate">{subtitle}</p>}
                     </div>
 
-                    {/* Stats */}
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-sm font-bold">{formatNumber(entry.streams)}</p>
-                      <p className="text-[10px] text-muted-foreground">{config.unit}</p>
-                    </div>
-
-                    {/* Trophy for #1 */}
-                    {pos === 1 && <Trophy className="w-5 h-5 text-yellow-400 flex-shrink-0" />}
+                    <span className="text-xs mono font-medium">{formatNumber(entry.streams)}</span>
                   </div>
 
-                  {/* Progress bar */}
-                  <div className="h-1.5 bg-secondary rounded-full overflow-hidden mt-2">
-                    <div className={`h-full rounded-full bg-gradient-to-r ${config.color} transition-all duration-500`}
-                      style={{ width: `${(entry.streams / maxStreams) * 100}%` }} />
+                  {/* Minimal bar */}
+                  <div className="h-[1px] bg-border/30 mt-2">
+                    <div className="h-full bg-foreground/30 transition-all duration-500" style={{ width: `${(entry.streams / maxStreams) * 100}%` }} />
                   </div>
                 </div>
               );
             })}
 
-            {/* Show more/less */}
             {displayData.length > 20 && (
               <button onClick={() => setExpanded(!expanded)}
-                className="w-full text-center py-3 text-xs text-primary font-medium hover:bg-primary/5 rounded-lg transition-colors">
-                {expanded ? `Show Less ▲` : `Show All ${displayData.length} ▼`}
+                className="w-full text-center py-2 text-[10px] text-muted-foreground font-medium hover:text-foreground transition-colors mono">
+                {expanded ? 'Show Less' : `Show All ${displayData.length}`}
               </button>
             )}
           </>
         ) : hasFallback ? (
-          isArtistChart ? fallbackArtists.slice(0, 20).map((artist, i) => {
-            const maxStreams = Math.max(...fallbackArtists.map(a => a.monthly_listeners), 1);
-            return (
-              <div key={artist.id} className="glass-card p-3">
-                <div className="flex items-center gap-3">
-                  <span className="text-lg font-display font-bold text-primary w-8 text-center">{i + 1}</span>
-                  <div className="w-5" />
-                  <div className="w-10 h-10 rounded-full bg-secondary overflow-hidden flex-shrink-0">
-                    {artist.avatar_url ? <img src={artist.avatar_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Music className="w-4 h-4 text-muted-foreground" /></div>}
+          isGenreChart ? (
+            genreFilteredSongs.length > 0 ? genreFilteredSongs.map((song: any, i: number) => {
+              const maxStreams = Math.max(...genreFilteredSongs.map((s: any) => s.streams), 1);
+              return (
+                <div key={song.id} className="glass-card p-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-6 text-center mono text-sm font-bold text-muted-foreground">{i + 1}</span>
+                    <div className="w-4" />
+                    <div className="w-8 h-8 rounded bg-muted overflow-hidden flex-shrink-0">
+                      {song.cover_url ? <img src={song.cover_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Music className="w-3 h-3 text-muted-foreground" /></div>}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate">{song.title}</p>
+                      <p className="text-[10px] text-muted-foreground">{song.profiles?.artist_name}</p>
+                    </div>
+                    <span className="text-xs mono">{formatNumber(song.streams)}</span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate">{artist.artist_name}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold">{formatNumber(artist.monthly_listeners)}</p>
-                    <p className="text-[10px] text-muted-foreground">listeners</p>
+                  <div className="h-[1px] bg-border/30 mt-2">
+                    <div className="h-full bg-foreground/20" style={{ width: `${(song.streams / maxStreams) * 100}%` }} />
                   </div>
                 </div>
-                <div className="h-1.5 bg-secondary rounded-full overflow-hidden mt-2">
-                  <div className={`h-full rounded-full bg-gradient-to-r ${config.color}`} style={{ width: `${(artist.monthly_listeners / maxStreams) * 100}%` }} />
+              );
+            }) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <p className="text-xs">No {config.label} chart data yet</p>
+              </div>
+            )
+          ) : isArtistChart ? fallbackArtists.slice(0, 20).map((artist, i) => {
+            const maxStreams = Math.max(...fallbackArtists.map(a => a.monthly_listeners), 1);
+            return (
+              <div key={artist.id} className="glass-card p-2.5">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-6 text-center mono text-sm font-bold text-muted-foreground">{i + 1}</span>
+                  <div className="w-4" />
+                  <div className="w-8 h-8 rounded-full bg-muted overflow-hidden flex-shrink-0">
+                    {artist.avatar_url ? <img src={artist.avatar_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Music className="w-3 h-3 text-muted-foreground" /></div>}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate">{artist.artist_name}</p>
+                  </div>
+                  <span className="text-xs mono">{formatNumber(artist.monthly_listeners)}</span>
+                </div>
+                <div className="h-[1px] bg-border/30 mt-2">
+                  <div className="h-full bg-foreground/20" style={{ width: `${(artist.monthly_listeners / maxStreams) * 100}%` }} />
                 </div>
               </div>
             );
           }) : fallbackSongs.slice(0, 20).map((song: any, i: number) => {
             const maxStreams = Math.max(...fallbackSongs.map((s: any) => s.streams), 1);
             return (
-              <div key={song.id} className="glass-card p-3">
-                <div className="flex items-center gap-3">
-                  <span className="text-lg font-display font-bold text-primary w-8 text-center">{i + 1}</span>
-                  <div className="w-5" />
-                  <div className="w-10 h-10 rounded bg-secondary overflow-hidden flex-shrink-0">
-                    {song.cover_url ? <img src={song.cover_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Music className="w-4 h-4 text-muted-foreground" /></div>}
+              <div key={song.id} className="glass-card p-2.5">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-6 text-center mono text-sm font-bold text-muted-foreground">{i + 1}</span>
+                  <div className="w-4" />
+                  <div className="w-8 h-8 rounded bg-muted overflow-hidden flex-shrink-0">
+                    {song.cover_url ? <img src={song.cover_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Music className="w-3 h-3 text-muted-foreground" /></div>}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate">{song.title}</p>
-                    <p className="text-xs text-muted-foreground">{song.profiles?.artist_name}</p>
+                    <p className="text-xs font-medium truncate">{song.title}</p>
+                    <p className="text-[10px] text-muted-foreground">{song.profiles?.artist_name}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold">{formatNumber(song.streams)}</p>
-                    <p className="text-[10px] text-muted-foreground">streams</p>
-                  </div>
+                  <span className="text-xs mono">{formatNumber(song.streams)}</span>
                 </div>
-                <div className="h-1.5 bg-secondary rounded-full overflow-hidden mt-2">
-                  <div className={`h-full rounded-full bg-gradient-to-r ${config.color}`} style={{ width: `${(song.streams / maxStreams) * 100}%` }} />
+                <div className="h-[1px] bg-border/30 mt-2">
+                  <div className="h-full bg-foreground/20" style={{ width: `${(song.streams / maxStreams) * 100}%` }} />
                 </div>
               </div>
             );
           })
         ) : (
           <div className="text-center py-12 text-muted-foreground">
-            <Disc3 className="w-10 h-10 mx-auto mb-3 opacity-50 animate-spin" style={{ animationDuration: '3s' }} />
-            <p className="text-sm font-medium">No chart data yet</p>
-            <p className="text-xs mt-1">Release music to climb the charts!</p>
+            <Disc3 className="w-8 h-8 mx-auto mb-3 opacity-30 animate-spin hollow-icon" strokeWidth={1.5} style={{ animationDuration: '3s' }} />
+            <p className="text-xs">No chart data yet</p>
+            <p className="text-[10px] mt-1 text-muted-foreground/50">Release music to climb the charts</p>
           </div>
         )}
       </div>
