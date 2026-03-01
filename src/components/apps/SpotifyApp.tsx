@@ -110,7 +110,7 @@ export default function SpotifyApp({ profile }: Props) {
   };
 
   const isOwnProfile = viewingArtist.user_id === user?.id;
-  const playlistColors = ['#1e3264', '#e8115b', '#148a08', '#e91429', '#8400e7', '#1e3264', '#f59b23', '#dc148c'];
+  const playlistColors = ['#1a1a1a', '#222', '#181818', '#252525', '#1f1f1f', '#1a1a1a', '#202020', '#1c1c1c'];
 
   const getPlaylistImage = (idx: number) => {
     const artist = allArtists[idx % allArtists.length];
@@ -139,7 +139,7 @@ export default function SpotifyApp({ profile }: Props) {
   // ── FULL-SCREEN NOW PLAYING ──
   if (section === 'now-playing' && currentlyPlaying) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#535353] to-[#121212] text-white flex flex-col">
+      <div className="min-h-screen bg-gradient-to-b from-[#1a1a1a] to-[#050505] text-white flex flex-col">
         {/* Top bar */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
           <button onClick={goBack}><ChevronLeft className="w-6 h-6" /></button>
@@ -210,13 +210,13 @@ export default function SpotifyApp({ profile }: Props) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#121212] text-white">
+    <div className="flex flex-col h-full bg-[#050505] text-white">
       
       <div className="flex-1 overflow-y-auto">
       {/* ── HOME ── */}
       {section === 'home' && (
         <div>
-          <div className="bg-gradient-to-b from-[#1a1a2e] to-[#121212] px-4 pt-4 pb-6">
+          <div className="bg-gradient-to-b from-[#111] to-[#050505] px-4 pt-4 pb-6">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-[#282828] overflow-hidden">
@@ -635,7 +635,7 @@ export default function SpotifyApp({ profile }: Props) {
 
       {/* ── BOTTOM NAV ── */}
       {section !== 'now-playing' && (
-        <div className="flex-shrink-0 bg-gradient-to-t from-[#121212] via-[#121212] to-[#12121200] pt-2 pb-2 z-30">
+        <div className="flex-shrink-0 bg-[#050505] border-t border-[#1a1a1a] pt-2 pb-2 z-30">
           <div className="flex justify-around py-1 px-4">
             <button onClick={() => setSection('home')} className={`flex flex-col items-center gap-0.5 ${section === 'home' ? 'text-white' : 'text-[#b3b3b3]'}`}>
               <Home className={`w-6 h-6 ${section === 'home' ? 'fill-white' : ''}`} />

@@ -3,7 +3,7 @@ import { Profile } from '@/hooks/useProfile';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatNumber, formatMoney } from '@/lib/supabase-helpers';
-import { Video, Film, DollarSign, Eye, TrendingUp, Music, Clapperboard, Sparkles } from 'lucide-react';
+import { Film, DollarSign, Eye, TrendingUp, Music, Clapperboard, Video, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Props {
@@ -22,10 +22,10 @@ interface MusicVideo {
 }
 
 const BUDGET_TIERS = [
-  { id: 'low', name: 'Lyric Video', cost: 500, boost: 1000, emoji: '📝', desc: 'Simple animated text over visuals', viewMultiplier: 1 },
-  { id: 'medium', name: 'Standard MV', cost: 5000, boost: 10000, emoji: '🎬', desc: 'Professional music video with a concept', viewMultiplier: 3 },
-  { id: 'high', name: 'Cinematic MV', cost: 20000, boost: 50000, emoji: '🎥', desc: 'High-budget cinematic production', viewMultiplier: 8 },
-  { id: 'blockbuster', name: 'Blockbuster MV', cost: 100000, boost: 250000, emoji: '🏆', desc: 'A-list directors, exotic locations, VFX', viewMultiplier: 20 },
+  { id: 'low', name: 'Lyric Video', cost: 500, boost: 1000, icon: Film, desc: 'Animated text over visuals', viewMultiplier: 1 },
+  { id: 'medium', name: 'Standard MV', cost: 5000, boost: 10000, icon: Clapperboard, desc: 'Professional music video', viewMultiplier: 3 },
+  { id: 'high', name: 'Cinematic MV', cost: 20000, boost: 50000, icon: Video, desc: 'High-budget production', viewMultiplier: 8 },
+  { id: 'blockbuster', name: 'Blockbuster MV', cost: 100000, boost: 250000, icon: Sparkles, desc: 'A-list directors, VFX, exotic locations', viewMultiplier: 20 },
 ];
 
 export default function MusicVideoApp({ profile }: Props) {
@@ -53,7 +53,7 @@ export default function MusicVideoApp({ profile }: Props) {
     const tier = BUDGET_TIERS.find(t => t.id === selectedBudget)!;
 
     if (profile.current_money < tier.cost) {
-      toast.error("You can't afford this production!");
+      toast.error("Not enough money");
       return;
     }
 
@@ -79,7 +79,7 @@ export default function MusicVideoApp({ profile }: Props) {
       total_streams: profile.total_streams + Math.floor(initialViews * 0.5),
     }).eq('id', profile.id);
 
-    toast.success(`Music video produced! 🎬 ${formatNumber(initialViews)} initial views!`);
+    toast.success(`Music video produced! ${formatNumber(initialViews)} initial views`);
     setProducing(false);
     setSelectedSong(null);
 
@@ -91,137 +91,115 @@ export default function MusicVideoApp({ profile }: Props) {
   const totalViews = videos.reduce((sum, v) => sum + v.views, 0);
 
   return (
-    <div className="min-h-full bg-[#0a0a0a] text-white">
-      <div className="bg-gradient-to-b from-[#dc2626]/30 to-[#0a0a0a] px-4 pt-4 pb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-[#dc2626] flex items-center justify-center">
-            <Clapperboard className="w-5 h-5" />
+    <div className="min-h-full bg-[#050505] text-[#eee]">
+      <div className="bg-gradient-to-b from-[#111] to-[#050505] px-4 pt-4 pb-5">
+        <div className="flex items-center gap-3 mb-1">
+          <div className="w-8 h-8 rounded-lg border border-[#333] flex items-center justify-center">
+            <Clapperboard className="w-4 h-4 text-[#888]" strokeWidth={1.5} />
           </div>
           <div>
-            <h1 className="text-xl font-bold">Music Videos</h1>
-            <p className="text-xs text-white/60">{videos.length} videos • {formatNumber(totalViews)} total views</p>
+            <h1 className="text-base font-bold tracking-tight">Music Videos</h1>
+            <p className="text-[10px] text-[#666] font-mono">{videos.length} videos · {formatNumber(totalViews)} views</p>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-[#222] mx-4">
-        <button onClick={() => setTab('create')} className={`flex-1 py-3 text-sm font-medium ${tab === 'create' ? 'text-white border-b-2 border-[#dc2626]' : 'text-[#888]'}`}>
+      <div className="flex border-b border-[#1a1a1a] mx-4">
+        <button onClick={() => setTab('create')} className={`flex-1 py-2.5 text-[10px] font-medium uppercase tracking-wider ${tab === 'create' ? 'text-[#eee] border-b border-[#eee]' : 'text-[#555]'}`}>
           Create
         </button>
-        <button onClick={() => setTab('library')} className={`flex-1 py-3 text-sm font-medium ${tab === 'library' ? 'text-white border-b-2 border-[#dc2626]' : 'text-[#888]'}`}>
+        <button onClick={() => setTab('library')} className={`flex-1 py-2.5 text-[10px] font-medium uppercase tracking-wider ${tab === 'library' ? 'text-[#eee] border-b border-[#eee]' : 'text-[#555]'}`}>
           Library ({videos.length})
         </button>
       </div>
 
       {tab === 'create' && (
-        <div className="px-4 py-4 space-y-5">
-          {/* Select song */}
+        <div className="px-4 py-4 space-y-4">
           <div>
-            <h3 className="text-sm font-bold text-[#888] mb-2">Select a Released Song</h3>
+            <h3 className="text-[10px] font-medium text-[#666] mb-2 uppercase tracking-wider">Select Song</h3>
             {songs.length > 0 ? (
-              <div className="space-y-2 max-h-40 overflow-y-auto">
+              <div className="space-y-1.5 max-h-40 overflow-y-auto">
                 {songs.map((song) => (
-                  <button
-                    key={song.id}
-                    onClick={() => setSelectedSong(song.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left ${
-                      selectedSong === song.id ? 'bg-[#dc2626]/20 ring-1 ring-[#dc2626]' : 'bg-[#1a1a1a]'
-                    }`}
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-[#282828] overflow-hidden flex-shrink-0">
-                      {song.cover_url ? <img src={song.cover_url} alt="" className="w-full h-full object-cover" /> : <Music className="w-4 h-4 text-[#555] m-3" />}
+                  <button key={song.id} onClick={() => setSelectedSong(song.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left border ${
+                      selectedSong === song.id ? 'border-[#555] bg-[#111]' : 'border-transparent bg-[#0a0a0a]'
+                    }`}>
+                    <div className="w-8 h-8 rounded bg-[#1a1a1a] overflow-hidden flex-shrink-0">
+                      {song.cover_url ? <img src={song.cover_url} alt="" className="w-full h-full object-cover" /> : <Music className="w-3 h-3 text-[#444] m-2.5" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{song.title}</p>
-                      <p className="text-xs text-[#888]">{formatNumber(song.streams)} streams</p>
+                      <p className="text-xs font-medium truncate">{song.title}</p>
+                      <p className="text-[10px] text-[#555] font-mono">{formatNumber(song.streams)} streams</p>
                     </div>
                   </button>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-[#888] bg-[#1a1a1a] rounded-xl p-4">Release a song first to create a music video!</p>
+              <p className="text-xs text-[#555] bg-[#0a0a0a] rounded-lg p-3">Release a song first</p>
             )}
           </div>
 
-          {/* Budget tiers */}
           <div>
-            <h3 className="text-sm font-bold text-[#888] mb-2">Production Budget</h3>
-            <div className="space-y-2">
-              {BUDGET_TIERS.map((tier) => (
-                <button
-                  key={tier.id}
-                  onClick={() => setSelectedBudget(tier.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left ${
-                    selectedBudget === tier.id ? 'bg-[#dc2626]/20 ring-1 ring-[#dc2626]' : 'bg-[#1a1a1a]'
-                  }`}
-                >
-                  <span className="text-2xl">{tier.emoji}</span>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-bold">{tier.name}</p>
-                      <p className="text-sm font-bold text-[#dc2626]">{formatMoney(tier.cost)}</p>
+            <h3 className="text-[10px] font-medium text-[#666] mb-2 uppercase tracking-wider">Budget</h3>
+            <div className="space-y-1.5">
+              {BUDGET_TIERS.map((tier) => {
+                const TierIcon = tier.icon;
+                return (
+                  <button key={tier.id} onClick={() => setSelectedBudget(tier.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left border ${
+                      selectedBudget === tier.id ? 'border-[#555] bg-[#111]' : 'border-transparent bg-[#0a0a0a]'
+                    }`}>
+                    <TierIcon className="w-4 h-4 text-[#666]" strokeWidth={1.5} />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium">{tier.name}</p>
+                        <p className="text-xs font-mono text-[#888]">{formatMoney(tier.cost)}</p>
+                      </div>
+                      <p className="text-[10px] text-[#555] mt-0.5">{tier.desc}</p>
                     </div>
-                    <p className="text-xs text-[#888] mt-0.5">{tier.desc}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#dc2626]/10 text-[#dc2626]">+{formatNumber(tier.boost)} YT boost</span>
-                    </div>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          <button
-            onClick={handleProduce}
-            disabled={producing || !selectedSong}
-            className="w-full bg-gradient-to-r from-[#dc2626] to-[#ef4444] rounded-xl py-4 font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2"
-          >
+          <button onClick={handleProduce} disabled={producing || !selectedSong}
+            className="w-full border border-[#444] rounded-lg py-3 font-medium text-sm disabled:opacity-30 flex items-center justify-center gap-2 hover:bg-[#111] transition-colors">
             {producing ? (
-              <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Producing...</>
+              <><div className="w-3.5 h-3.5 border border-[#eee] border-t-transparent rounded-full animate-spin" /> Producing...</>
             ) : (
-              <><Film className="w-5 h-5" /> Produce Music Video</>
+              <><Film className="w-4 h-4" strokeWidth={1.5} /> Produce Video</>
             )}
           </button>
         </div>
       )}
 
       {tab === 'library' && (
-        <div className="px-4 py-4 space-y-3">
+        <div className="px-4 py-4 space-y-2">
           {videos.length > 0 ? videos.map((video) => {
             const tier = BUDGET_TIERS.find(t => t.id === video.budget);
+            const TierIcon = tier?.icon || Film;
             return (
-              <div key={video.id} className="bg-[#1a1a1a] rounded-xl p-4">
+              <div key={video.id} className="bg-[#0a0a0a] rounded-lg p-3 border border-[#1a1a1a]">
                 <div className="flex items-center gap-3">
-                  <div className="w-16 h-10 rounded-lg bg-[#282828] flex items-center justify-center text-xl">
-                    {tier?.emoji || '🎬'}
-                  </div>
+                  <TierIcon className="w-4 h-4 text-[#555]" strokeWidth={1.5} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold truncate">{video.song_title || 'Unknown'}</p>
-                    <p className="text-xs text-[#888]">{tier?.name || video.budget}</p>
+                    <p className="text-xs font-medium truncate">{video.song_title || 'Unknown'}</p>
+                    <p className="text-[10px] text-[#555]">{tier?.name || video.budget}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 mt-3 text-xs">
-                  <div className="flex items-center gap-1 text-[#888]">
-                    <Eye className="w-3 h-3" />
-                    <span>{formatNumber(video.views)} views</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-[#888]">
-                    <TrendingUp className="w-3 h-3" />
-                    <span>+{formatNumber(video.youtube_boost)} YT boost</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-[#888]">
-                    <DollarSign className="w-3 h-3" />
-                    <span>{formatMoney(video.cost)} spent</span>
-                  </div>
+                <div className="flex items-center gap-4 mt-2 text-[10px] text-[#555] font-mono">
+                  <span className="flex items-center gap-1"><Eye className="w-2.5 h-2.5" />{formatNumber(video.views)}</span>
+                  <span className="flex items-center gap-1"><TrendingUp className="w-2.5 h-2.5" />+{formatNumber(video.youtube_boost)}</span>
+                  <span className="flex items-center gap-1"><DollarSign className="w-2.5 h-2.5" />{formatMoney(video.cost)}</span>
                 </div>
               </div>
             );
           }) : (
-            <div className="text-center py-12 text-[#888]">
-              <Video className="w-10 h-10 mx-auto mb-3 opacity-50" />
-              <p className="text-sm">No music videos yet</p>
-              <p className="text-xs mt-1">Create your first music video to boost your YouTube!</p>
+            <div className="text-center py-10 text-[#555]">
+              <Video className="w-6 h-6 mx-auto mb-2 opacity-40" strokeWidth={1.5} />
+              <p className="text-xs">No music videos yet</p>
             </div>
           )}
         </div>

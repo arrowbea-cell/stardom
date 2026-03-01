@@ -3,7 +3,7 @@ import { Profile } from '@/hooks/useProfile';
 import { useGameState } from '@/hooks/useGameState';
 import { supabase } from '@/integrations/supabase/client';
 import { formatNumber, formatMoney } from '@/lib/supabase-helpers';
-import { TrendingUp, Music, DollarSign, Headphones, Users, Zap, Trophy, Radio, Star, Clock, ArrowUpRight } from 'lucide-react';
+import { TrendingUp, Music, DollarSign, Headphones, Users, Zap, Trophy, Radio, Star, Clock, ArrowUpRight, Activity, Disc3 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface Props {
@@ -29,16 +29,10 @@ const ACHIEVEMENTS = [
   { id: 'rich', label: 'Cash Money', desc: 'Have $50,000+', icon: DollarSign, threshold: (p: Profile) => p.current_money >= 50000 },
 ];
 
-const PLATFORM_COLORS: Record<string, string> = {
-  spotify: 'text-primary',
-  apple_music: 'text-[hsl(var(--apple-red))]',
-  youtube: 'text-[hsl(var(--youtube-red))]',
-};
-
-const PLATFORM_NAMES: Record<string, string> = {
-  spotify: 'Spotify',
-  apple_music: 'Apple Music',
-  youtube: 'YouTube',
+const PLATFORM_LABELS: Record<string, string> = {
+  spotify: 'SPT',
+  apple_music: 'APL',
+  youtube: 'YT',
 };
 
 export default function HomeTab({ profile }: Props) {
@@ -48,7 +42,6 @@ export default function HomeTab({ profile }: Props) {
   const [totalRadioSpins, setTotalRadioSpins] = useState(0);
 
   useEffect(() => {
-    // Fetch recent stream activity
     supabase
       .from('stream_history')
       .select('id, platform, streams_gained, turn_number, songs!stream_history_song_id_fkey(title)')
@@ -64,7 +57,6 @@ export default function HomeTab({ profile }: Props) {
         }
       });
 
-    // Fetch song count for achievements
     supabase
       .from('songs')
       .select('id, radio_spins')
@@ -80,10 +72,10 @@ export default function HomeTab({ profile }: Props) {
   const estimatedRevenue = Math.floor(profile.total_streams * 0.004);
 
   const stats = [
-    { label: 'Total Streams', value: formatNumber(profile.total_streams), icon: Headphones, color: 'text-primary' },
-    { label: 'Monthly Listeners', value: formatNumber(profile.monthly_listeners), icon: Users, color: 'text-primary' },
-    { label: 'Balance', value: formatMoney(profile.current_money), icon: DollarSign, color: 'text-primary' },
-    { label: 'Est. Revenue', value: formatMoney(estimatedRevenue), icon: TrendingUp, color: 'text-primary' },
+    { label: 'Streams', value: formatNumber(profile.total_streams), icon: Activity },
+    { label: 'Listeners', value: formatNumber(profile.monthly_listeners), icon: Users },
+    { label: 'Balance', value: formatMoney(profile.current_money), icon: DollarSign },
+    { label: 'Revenue', value: formatMoney(estimatedRevenue), icon: TrendingUp },
   ];
 
   const unlockedAchievements = ACHIEVEMENTS.filter(a => {
@@ -98,121 +90,128 @@ export default function HomeTab({ profile }: Props) {
     return !a.threshold(profile);
   });
 
+  const timerPercent = gameState ? Math.max(0, 100 - (timeLeft / (gameState.turn_duration_minutes * 60 * 1000)) * 100) : 0;
+
   return (
-    <div className="p-4 space-y-5">
-      {/* Welcome + Timer */}
-      <div className="glass-card p-5">
-        <div className="flex items-center justify-between mb-1">
-          <h2 className="font-display text-xl font-bold">Welcome back, {profile.artist_name}</h2>
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-mono">
-            <Clock className="w-3 h-3" />
-            {formatTimeLeft()}
+    <div className="p-4 space-y-4">
+      {/* Timer + Turn */}
+      <div className="glass-card p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="font-display text-lg font-bold tracking-tight">{profile.artist_name}</h2>
+            <p className="text-[11px] text-muted-foreground mono">Turn {gameState?.current_turn ?? 0}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-lg font-display font-bold mono">{formatTimeLeft()}</p>
+            <p className="text-[10px] text-muted-foreground">until next turn</p>
           </div>
         </div>
-        <p className="text-muted-foreground text-sm">Turn {gameState?.current_turn ?? 0} • Next update {timeLeft === 0 ? 'processing...' : 'coming soon'}</p>
+        {/* Progress bar */}
+        <div className="h-[2px] bg-border rounded-full overflow-hidden">
+          <motion.div
+            className="h-full bg-foreground"
+            animate={{ width: `${timerPercent}%` }}
+            transition={{ duration: 0.5 }}
+          />
+        </div>
       </div>
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* Stats grid — minimal B&W */}
+      <div className="grid grid-cols-2 gap-2">
         {stats.map((stat, i) => (
           <motion.div
             key={stat.label}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            className="glass-card p-4"
+            transition={{ delay: i * 0.04 }}
+            className="glass-card p-3"
           >
-            <div className="flex items-center gap-2 mb-2">
-              <stat.icon className={`w-4 h-4 ${stat.color}`} />
-              <span className="text-xs text-muted-foreground">{stat.label}</span>
+            <div className="flex items-center gap-1.5 mb-1">
+              <stat.icon className="w-3 h-3 text-muted-foreground hollow-icon" strokeWidth={1.5} />
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{stat.label}</span>
             </div>
-            <p className="font-display text-xl font-bold">{stat.value}</p>
+            <p className="font-display text-lg font-bold mono">{stat.value}</p>
           </motion.div>
         ))}
       </div>
 
-      {/* Achievements */}
-      <div className="glass-card p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Trophy className="w-4 h-4 text-primary" />
-          <h3 className="font-display font-semibold text-sm">Achievements</h3>
-          <span className="ml-auto text-xs text-muted-foreground">{unlockedAchievements.length}/{ACHIEVEMENTS.length}</span>
+      {/* Achievements — minimal */}
+      <div className="glass-card p-3">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1.5">
+            <Trophy className="w-3.5 h-3.5 text-muted-foreground hollow-icon" strokeWidth={1.5} />
+            <h3 className="font-display font-semibold text-xs uppercase tracking-wider">Achievements</h3>
+          </div>
+          <span className="text-[10px] text-muted-foreground mono">{unlockedAchievements.length}/{ACHIEVEMENTS.length}</span>
         </div>
-        <div className="flex gap-2 flex-wrap mb-3">
+        <div className="flex gap-1.5 flex-wrap">
           {ACHIEVEMENTS.map((a) => {
             const unlocked = unlockedAchievements.includes(a);
             const Icon = a.icon;
             return (
               <div
                 key={a.id}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-all ${
+                className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] transition-all border ${
                   unlocked 
-                    ? 'bg-primary/15 text-primary border border-primary/30' 
-                    : 'bg-secondary/50 text-muted-foreground/40 border border-border/30'
+                    ? 'border-foreground/30 text-foreground bg-foreground/5' 
+                    : 'border-border/30 text-muted-foreground/30'
                 }`}
                 title={a.desc}
               >
-                <Icon className="w-3 h-3" />
+                <Icon className="w-2.5 h-2.5 hollow-icon" strokeWidth={1.5} />
                 {a.label}
               </div>
             );
           })}
         </div>
         {nextAchievement && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary/50 rounded-lg px-3 py-2">
-            <Zap className="w-3 h-3 text-primary" />
-            <span>Next: <span className="text-foreground font-medium">{nextAchievement.label}</span> — {nextAchievement.desc}</span>
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-2 pt-2 border-t border-border/20">
+            <Zap className="w-2.5 h-2.5 hollow-icon" strokeWidth={1.5} />
+            <span>Next: <span className="text-foreground">{nextAchievement.label}</span> — {nextAchievement.desc}</span>
           </div>
         )}
       </div>
 
-      {/* Recent Activity Feed */}
-      <div className="glass-card p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <ArrowUpRight className="w-4 h-4 text-primary" />
-          <h3 className="font-display font-semibold text-sm">Recent Activity</h3>
+      {/* Recent Activity — clean feed */}
+      <div className="glass-card p-3">
+        <div className="flex items-center gap-1.5 mb-2">
+          <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground hollow-icon" strokeWidth={1.5} />
+          <h3 className="font-display font-semibold text-xs uppercase tracking-wider">Activity</h3>
         </div>
         {recentActivity.length > 0 ? (
-          <div className="space-y-2 max-h-48 overflow-y-auto">
+          <div className="space-y-0 max-h-48 overflow-y-auto">
             {recentActivity.map((event, i) => (
               <motion.div
                 key={event.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.03 }}
-                className="flex items-center justify-between py-1.5 border-b border-border/30 last:border-0"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: i * 0.02 }}
+                className="flex items-center justify-between py-1.5 border-b border-border/10 last:border-0"
               >
                 <div className="flex items-center gap-2">
-                  <div className={`w-1.5 h-1.5 rounded-full ${
-                    event.platform === 'spotify' ? 'bg-primary' :
-                    event.platform === 'apple_music' ? 'bg-[hsl(var(--apple-red))]' :
-                    'bg-[hsl(var(--youtube-red))]'
-                  }`} />
-                  <span className="text-xs text-muted-foreground">
-                    <span className={PLATFORM_COLORS[event.platform]}>{PLATFORM_NAMES[event.platform]}</span>
-                    {' · '}{event.song_title}
-                  </span>
+                  <span className="text-[9px] mono text-muted-foreground w-6">{PLATFORM_LABELS[event.platform]}</span>
+                  <span className="text-[11px] text-muted-foreground truncate max-w-[140px]">{event.song_title}</span>
                 </div>
-                <span className="text-xs font-mono text-primary">+{formatNumber(event.streams_gained)}</span>
+                <span className="text-[11px] mono text-foreground">+{formatNumber(event.streams_gained)}</span>
               </motion.div>
             ))}
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground text-center py-4">No activity yet — release a song to get started!</p>
+          <p className="text-[11px] text-muted-foreground text-center py-6">No activity yet — release a song to get started</p>
         )}
       </div>
 
       {/* Quick Tips */}
-      <div className="glass-card p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Star className="w-4 h-4 text-primary" />
-          <h3 className="font-display font-semibold text-sm">Tips</h3>
+      <div className="glass-card p-3">
+        <div className="flex items-center gap-1.5 mb-2">
+          <Disc3 className="w-3.5 h-3.5 text-muted-foreground hollow-icon" strokeWidth={1.5} />
+          <h3 className="font-display font-semibold text-xs uppercase tracking-wider">Tips</h3>
         </div>
-        <ul className="space-y-1.5 text-xs text-muted-foreground">
-          <li className="flex items-center gap-2"><span className="text-primary">•</span> Release songs from the Studio app to earn streams</li>
-          <li className="flex items-center gap-2"><span className="text-primary">•</span> Promote songs for a boost multiplier on the next turn</li>
-          <li className="flex items-center gap-2"><span className="text-primary">•</span> Charts refresh every hour — climb the Hot 100!</li>
-          <li className="flex items-center gap-2"><span className="text-primary">•</span> Check your presence across Spotify, Apple Music & more</li>
+        <ul className="space-y-1 text-[11px] text-muted-foreground">
+          <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-foreground/40" /> Release songs from the Studio app to earn streams</li>
+          <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-foreground/40" /> Promote songs for a boost multiplier next turn</li>
+          <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-foreground/40" /> Charts refresh every hour — climb the Hot 100</li>
+          <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-foreground/40" /> Buy visas to travel and perform worldwide</li>
         </ul>
       </div>
     </div>

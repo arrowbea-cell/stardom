@@ -3,8 +3,8 @@ import { useProfile } from '@/hooks/useProfile';
 import { useGameState } from '@/hooks/useGameState';
 import { useAuth } from '@/hooks/useAuth';
 import { formatNumber, formatMoney } from '@/lib/supabase-helpers';
-import { motion } from 'framer-motion';
-import { Home, Grid3X3, BarChart3, Stamp, Plane, Crown, User, DollarSign, Clock } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Home, Grid3X3, BarChart3, Stamp, Plane, Crown, User, DollarSign, Clock, LogOut } from 'lucide-react';
 import HomeTab from '@/components/game/HomeTab';
 import AppsTab from '@/components/game/AppsTab';
 import ChartsTab from '@/components/game/ChartsTab';
@@ -34,8 +34,8 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background flex max-w-lg md:max-w-full mx-auto relative">
-      {/* Side nav rail */}
-      <nav className="sticky top-0 h-screen w-14 flex-shrink-0 bg-card/95 backdrop-blur-xl border-r border-border/50 z-50 flex flex-col items-center py-3 gap-1 overflow-y-auto">
+      {/* Side nav rail — monochrome, hollow icons */}
+      <nav className="sticky top-0 h-screen w-[52px] flex-shrink-0 bg-background border-r border-border/30 z-50 flex flex-col items-center py-4 gap-0.5 overflow-y-auto">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -43,60 +43,73 @@ export default function Dashboard() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex flex-col items-center gap-0.5 px-1 py-2 rounded-lg transition-colors w-12 ${
-                isActive ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground'
+              className={`flex flex-col items-center gap-0.5 px-1 py-2 rounded-md transition-all w-10 group ${
+                isActive
+                  ? 'text-foreground'
+                  : 'text-muted-foreground hover:text-foreground/70'
               }`}
             >
-              <Icon className="w-5 h-5" />
-              <span className="text-[8px] font-medium leading-tight">{tab.label}</span>
+              <Icon className="w-[18px] h-[18px] hollow-icon" strokeWidth={isActive ? 2 : 1.5} />
+              <span className="text-[7px] font-medium leading-tight tracking-wide uppercase">{tab.label}</span>
+              {isActive && (
+                <motion.div layoutId="nav-indicator" className="w-1 h-1 rounded-full bg-foreground mt-0.5" />
+              )}
             </button>
           );
         })}
+        <div className="mt-auto">
+          <button onClick={signOut} className="p-2 text-muted-foreground hover:text-foreground transition-colors">
+            <LogOut className="w-4 h-4 hollow-icon" strokeWidth={1.5} />
+          </button>
+        </div>
       </nav>
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Status bar */}
-        <header className="flex items-center justify-between px-4 py-2 bg-card/80 backdrop-blur-md sticky top-0 z-40 border-b border-border/50">
-          <div className="flex items-center gap-2">
+        {/* Status bar — minimal */}
+        <header className="flex items-center justify-between px-4 py-2.5 bg-background/90 backdrop-blur-sm sticky top-0 z-40 border-b border-border/20">
+          <div className="flex items-center gap-2.5">
             {profile.avatar_url ? (
-              <img src={profile.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover" />
+              <img src={profile.avatar_url} alt="" className="w-6 h-6 rounded-full object-cover ring-1 ring-border/50" />
             ) : (
-              <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-xs">
+              <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium">
                 {profile.artist_name[0]}
               </div>
             )}
-            <span className="font-display font-semibold text-xs truncate max-w-[100px]">{profile.artist_name}</span>
+            <span className="font-display font-semibold text-xs tracking-tight">{profile.artist_name}</span>
           </div>
-          <div className="flex items-center gap-3 text-[10px]">
-            <div className="flex items-center gap-1 text-primary font-mono">
-              <Clock className="w-3 h-3" />
-              {formatTimeLeft()}
+          <div className="flex items-center gap-4 text-[10px] mono">
+            <div className="flex items-center gap-1 text-foreground/80">
+              <Clock className="w-3 h-3 hollow-icon" strokeWidth={1.5} />
+              <span>{formatTimeLeft()}</span>
             </div>
             <span className="text-muted-foreground">T{gameState?.current_turn ?? 0}</span>
             <div className="flex items-center gap-0.5 text-muted-foreground">
-              <DollarSign className="w-3 h-3" />
+              <DollarSign className="w-3 h-3 hollow-icon" strokeWidth={1.5} />
               <span>{formatMoney(profile.current_money)}</span>
             </div>
           </div>
         </header>
 
         {/* Content */}
-        <motion.main
-          key={activeTab}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.15 }}
-          className="flex-1 overflow-auto"
-        >
-          {activeTab === 'home' && <HomeTab profile={profile} />}
-          {activeTab === 'apps' && <AppsTab profile={profile} />}
-          {activeTab === 'charts' && <ChartsTab />}
-          {activeTab === 'visa' && <VisaTab profile={profile} />}
-          {activeTab === 'travel' && <TravelTab profile={profile} />}
-          {activeTab === 'lifestyle' && <LifestyleTab profile={profile} />}
-          {activeTab === 'profile' && <ProfileTab profile={profile} />}
-        </motion.main>
+        <AnimatePresence mode="wait">
+          <motion.main
+            key={activeTab}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.12 }}
+            className="flex-1 overflow-auto"
+          >
+            {activeTab === 'home' && <HomeTab profile={profile} />}
+            {activeTab === 'apps' && <AppsTab profile={profile} />}
+            {activeTab === 'charts' && <ChartsTab />}
+            {activeTab === 'visa' && <VisaTab profile={profile} />}
+            {activeTab === 'travel' && <TravelTab profile={profile} />}
+            {activeTab === 'lifestyle' && <LifestyleTab profile={profile} />}
+            {activeTab === 'profile' && <ProfileTab profile={profile} />}
+          </motion.main>
+        </AnimatePresence>
       </div>
     </div>
   );
