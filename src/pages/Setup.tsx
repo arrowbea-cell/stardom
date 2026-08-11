@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { uploadArtistImage } from '@/lib/supabase-helpers';
+import { createLocalProfile } from '@/lib/localSave';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion } from 'framer-motion';
@@ -47,11 +48,22 @@ export default function Setup() {
 
   const handleSubmit = async () => {
     if (!artistName.trim()) return;
+    setLoading(true);
+
+    // Offline-first: if the online session isn't available, start the career locally.
     if (!user) {
-      toast.error("Couldn't reach the servers — try again in a moment.");
+      createLocalProfile({
+        artistName: artistName.trim(),
+        avatarUrl: avatarPreview,
+        money: selectedMoney,
+        genre: selectedGenre,
+        age: selectedAge,
+      });
+      toast.success('Welcome to the industry!');
+      navigate('/dashboard');
+      setLoading(false);
       return;
     }
-    setLoading(true);
 
 
     let avatarUrl: string | null = null;
@@ -75,7 +87,15 @@ export default function Setup() {
         navigate('/dashboard', { replace: true });
         return;
       }
-      toast.error(error.message);
+      createLocalProfile({
+        artistName: artistName.trim(),
+        avatarUrl: avatarPreview ?? avatarUrl,
+        money: selectedMoney,
+        genre: selectedGenre,
+        age: selectedAge,
+      });
+      toast.success('Welcome to the industry!');
+      navigate('/dashboard');
     } else {
       toast.success('Welcome to the industry!');
       navigate('/dashboard');
