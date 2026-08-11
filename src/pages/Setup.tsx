@@ -34,16 +34,8 @@ export default function Setup() {
     }
   }, [profile, profileLoading, navigate]);
 
-  // Show loading while checking auth/profile
-  if (authLoading || profileLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Disc3 className="w-12 h-12 text-primary animate-spin" />
-      </div>
-    );
-  }
+  if (profile) return null;
 
-  if (!user || profile) return null;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
