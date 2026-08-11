@@ -46,8 +46,13 @@ export default function Setup() {
   };
 
   const handleSubmit = async () => {
-    if (!user || !artistName.trim()) return;
+    if (!artistName.trim()) return;
+    if (!user) {
+      toast.error("Couldn't reach the servers — try again in a moment.");
+      return;
+    }
     setLoading(true);
+
 
     let avatarUrl: string | null = null;
     if (avatarFile) {
