@@ -68,7 +68,11 @@ export default function Setup() {
 
     let avatarUrl: string | null = null;
     if (avatarFile) {
-      avatarUrl = await uploadArtistImage(avatarFile, user.id);
+      try {
+        avatarUrl = await uploadArtistImage(avatarFile, user.id);
+      } catch {
+        avatarUrl = null;
+      }
     }
 
     const { error } = await supabase.from('profiles').insert({
