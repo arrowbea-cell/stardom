@@ -25,7 +25,7 @@ export default function LeaderboardTab({ profile }: { profile: Profile }) {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from('leaderboard')
       .select('*')
       .order('total_streams', { ascending: false })
@@ -45,7 +45,7 @@ export default function LeaderboardTab({ profile }: { profile: Profile }) {
 
   const sync = async () => {
     setSyncing(true);
-    const { error } = await supabase.from('leaderboard').upsert(
+    const { error } = await (supabase as any).from('leaderboard').upsert(
       {
         user_id: profile.user_id,
         artist_name: profile.artist_name,

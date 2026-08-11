@@ -4,7 +4,7 @@ import { useGameState } from '@/hooks/useGameState';
 import { useAuth } from '@/hooks/useAuth';
 import { formatNumber, formatMoney } from '@/lib/supabase-helpers';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Grid3X3, BarChart3, Stamp, Plane, Crown, User, DollarSign, Clock, LogOut } from 'lucide-react';
+import { Home, Grid3X3, BarChart3, Stamp, Plane, Crown, User, DollarSign, Clock, LogOut, Trophy } from 'lucide-react';
 import HomeTab from '@/components/game/HomeTab';
 import AppsTab from '@/components/game/AppsTab';
 import ChartsTab from '@/components/game/ChartsTab';
@@ -12,11 +12,13 @@ import ProfileTab from '@/components/game/ProfileTab';
 import VisaTab from '@/components/game/VisaTab';
 import TravelTab from '@/components/game/TravelTab';
 import LifestyleTab from '@/components/game/LifestyleTab';
+import LeaderboardTab from '@/components/game/LeaderboardTab';
 
 const TABS = [
   { id: 'home', label: 'Home', icon: Home },
   { id: 'apps', label: 'Apps', icon: Grid3X3 },
   { id: 'charts', label: 'Charts', icon: BarChart3 },
+  { id: 'leaderboard', label: 'Ranks', icon: Trophy },
   { id: 'visa', label: 'Visa', icon: Stamp },
   { id: 'travel', label: 'Travel', icon: Plane },
   { id: 'lifestyle', label: 'Style', icon: Crown },
@@ -104,6 +106,7 @@ export default function Dashboard() {
             {activeTab === 'home' && <HomeTab profile={profile} />}
             {activeTab === 'apps' && <AppsTab profile={profile} />}
             {activeTab === 'charts' && <ChartsTab />}
+            {activeTab === 'leaderboard' && <LeaderboardTab profile={profile} />}
             {activeTab === 'visa' && <VisaTab profile={profile} />}
             {activeTab === 'travel' && <TravelTab profile={profile} />}
             {activeTab === 'lifestyle' && <LifestyleTab profile={profile} />}
