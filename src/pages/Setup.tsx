@@ -29,14 +29,10 @@ export default function Setup() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/', { replace: true });
-      return;
-    }
     if (!profileLoading && profile) {
       navigate('/dashboard', { replace: true });
     }
-  }, [profile, profileLoading, user, authLoading, navigate]);
+  }, [profile, profileLoading, navigate]);
 
   // Show loading while checking auth/profile
   if (authLoading || profileLoading) {
