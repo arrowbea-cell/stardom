@@ -1,20 +1,10 @@
-import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { Navigate } from 'react-router-dom';
-import { Disc3 } from 'lucide-react';
+import Setup from './Setup';
 
 export default function Index() {
-  const { user, loading: authLoading } = useAuth();
-  const { profile, loading: profileLoading } = useProfile();
+  const { profile, loading } = useProfile();
 
-  if (authLoading || (user && profileLoading)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Disc3 className="w-12 h-12 text-primary animate-spin" />
-      </div>
-    );
-  }
-
-  if (!profile) return <Navigate to="/setup" replace />;
-  return <Navigate to="/dashboard" replace />;
+  if (!loading && profile) return <Navigate to="/dashboard" replace />;
+  return <Setup />;
 }
