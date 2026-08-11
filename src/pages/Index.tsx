@@ -1,7 +1,6 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { Navigate } from 'react-router-dom';
-import Auth from './Auth';
 import { Disc3 } from 'lucide-react';
 
 export default function Index() {
@@ -16,7 +15,6 @@ export default function Index() {
     );
   }
 
-  if (!user) return <Auth />;
   if (!profile) return <Navigate to="/setup" replace />;
   return <Navigate to="/dashboard" replace />;
 }
