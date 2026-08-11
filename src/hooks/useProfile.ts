@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { getLocalProfile } from '@/lib/localSave';
 
 export interface Profile {
   id: string;
@@ -30,12 +31,12 @@ export interface Profile {
 
 export function useProfile() {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(() => getLocalProfile());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
-      setProfile(null);
+      setProfile(getLocalProfile());
       setLoading(false);
       return;
     }
@@ -49,6 +50,8 @@ export function useProfile() {
 
       if (!error && data) {
         setProfile(data as Profile);
+      } else {
+        setProfile((prev) => prev ?? getLocalProfile());
       }
       setLoading(false);
     };
