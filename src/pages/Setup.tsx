@@ -83,7 +83,8 @@ export default function Setup() {
       current_money: selectedMoney,
       genre: selectedGenre,
       age: selectedAge,
-    });
+    }).then((r) => r, (e) => ({ error: { code: 'network', message: String(e) } as { code: string; message: string } }));
+
 
     if (error) {
       // If profile already exists (duplicate user_id), just redirect
