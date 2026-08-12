@@ -37,7 +37,7 @@ export default function LeaderboardTab({ profile }: { profile: Profile }) {
   useEffect(() => {
     load();
     const channel = supabase
-      .channel('leaderboard-live')
+      .channel(`leaderboard-live-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'leaderboard' }, () => load())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
