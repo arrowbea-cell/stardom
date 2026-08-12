@@ -25,7 +25,7 @@ export function useGameState() {
     fetch();
 
     const channel = supabase
-      .channel('game-state')
+      .channel(`game-state-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
