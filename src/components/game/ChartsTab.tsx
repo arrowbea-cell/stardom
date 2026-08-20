@@ -154,7 +154,7 @@ export default function ChartsTab() {
           <BarChart3 className="w-4 h-4 text-muted-foreground hollow-icon" strokeWidth={1.5} />
           <h2 className="font-display text-sm font-bold uppercase tracking-wider">Charts</h2>
         </div>
-        <span className="text-[10px] text-muted-foreground mono">Turn {currentTurn}</span>
+        <span className="text-[10px] text-muted-foreground mono">Week {currentTurn}</span>
       </div>
 
       {/* Main chart types */}
