@@ -102,31 +102,44 @@ export default function HomeTab({ profile }: Props) {
     return !a.threshold(profile);
   });
 
-  const timerPercent = gameState ? Math.max(0, 100 - (timeLeft / (gameState.turn_duration_minutes * 60 * 1000)) * 100) : 0;
+  const topSong = [...world.songs].sort((a, b) => (a.position ?? 999) - (b.position ?? 999))[0];
 
   return (
     <div className="p-4 space-y-4">
-      {/* Timer + Turn */}
+      {/* Week control */}
       <div className="glass-card p-4">
         <div className="flex items-center justify-between mb-3">
           <div>
             <h2 className="font-display text-lg font-bold tracking-tight">{profile.artist_name}</h2>
-            <p className="text-[11px] text-muted-foreground mono">Turn {gameState?.current_turn ?? 0}</p>
+            <p className="text-[11px] text-muted-foreground mono">Week {week}</p>
           </div>
-          <div className="text-right">
-            <p className="text-lg font-display font-bold mono">{formatTimeLeft()}</p>
-            <p className="text-[10px] text-muted-foreground">until next turn</p>
+          {topSong && (
+            <div className="text-right">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">#1 This Week</p>
+              <p className="text-[11px] font-medium truncate max-w-[160px]">{topSong.title}</p>
+              <p className="text-[10px] text-muted-foreground truncate max-w-[160px]">{topSong.artist_name}</p>
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={handleNextWeek}
+          disabled={advancing}
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-md border border-foreground/30 bg-foreground/5 hover:bg-foreground/10 transition-colors text-xs font-semibold uppercase tracking-widest disabled:opacity-40"
+        >
+          {advancing ? 'Simulating…' : 'Next Week'}
+          <ChevronRight className="w-3.5 h-3.5 hollow-icon" strokeWidth={1.5} />
+        </button>
+
+        {lastWeek && (
+          <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/20 text-[10px] mono text-muted-foreground">
+            <span>+{formatNumber(lastWeek.streamsGained)} streams</span>
+            <span>+{formatNumber(lastWeek.listenersGained)} listeners</span>
+            <span>+{formatMoney(lastWeek.moneyEarned)}</span>
           </div>
-        </div>
-        {/* Progress bar */}
-        <div className="h-[2px] bg-border rounded-full overflow-hidden">
-          <motion.div
-            className="h-full bg-foreground"
-            animate={{ width: `${timerPercent}%` }}
-            transition={{ duration: 0.5 }}
-          />
-        </div>
+        )}
       </div>
+
 
       {/* Stats grid — minimal B&W */}
       <div className="grid grid-cols-2 gap-2">
