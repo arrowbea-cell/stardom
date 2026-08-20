@@ -83,9 +83,8 @@ export default function Dashboard() {
           <div className="flex items-center gap-4 text-[10px] mono">
             <div className="flex items-center gap-1 text-foreground/80">
               <Clock className="w-3 h-3 hollow-icon" strokeWidth={1.5} />
-              <span>{formatTimeLeft()}</span>
+              <span>Week {week}</span>
             </div>
-            <span className="text-muted-foreground">T{gameState?.current_turn ?? 0}</span>
             <div className="flex items-center gap-0.5 text-muted-foreground">
               <DollarSign className="w-3 h-3 hollow-icon" strokeWidth={1.5} />
               <span>{formatMoney(profile.current_money)}</span>
