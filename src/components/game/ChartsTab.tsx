@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { formatNumber } from '@/lib/supabase-helpers';
 import { Profile } from '@/hooks/useProfile';
+import { useWorld } from '@/hooks/useWorld';
+import { getLocalProfile } from '@/lib/localSave';
 import { BarChart3, Music, Radio, Users, Crown, ChevronUp, ChevronDown, Minus, Disc3, Flame, Headphones, Mic2, Guitar, Waves, Zap, Globe } from 'lucide-react';
 
 type ChartType = 'hot_100_daily' | 'hot_100_weekly' | 'daily_radio' | 'weekly_radio' | 'monthly_listeners' | 'top_songs' | 'hip_hop' | 'pop' | 'rnb' | 'rock' | 'latin' | 'global';
