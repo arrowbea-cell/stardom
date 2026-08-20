@@ -37,10 +37,21 @@ const PLATFORM_LABELS: Record<string, string> = {
 };
 
 export default function HomeTab({ profile }: Props) {
-  const { gameState, formatTimeLeft, timeLeft } = useGameState();
+  const { world, week, nextWeek, advancing } = useWorld();
   const [recentActivity, setRecentActivity] = useState<StreamEvent[]>([]);
   const [songCount, setSongCount] = useState(0);
   const [totalRadioSpins, setTotalRadioSpins] = useState(0);
+  const [lastWeek, setLastWeek] = useState<{ streamsGained: number; listenersGained: number; moneyEarned: number } | null>(null);
+
+  const handleNextWeek = async () => {
+    const result = await nextWeek();
+    if (result) {
+      setLastWeek(result);
+      toast.success(`Week ${result.week}`, {
+        description: `+${formatNumber(result.streamsGained)} streams · +${formatMoney(result.moneyEarned)}`,
+      });
+    }
+  };
 
   useEffect(() => {
     supabase
