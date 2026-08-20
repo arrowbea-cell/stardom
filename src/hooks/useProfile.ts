@@ -34,6 +34,13 @@ export function useProfile() {
   const [profile, setProfile] = useState<Profile | null>(() => getLocalProfile());
   const [loading, setLoading] = useState(true);
 
+  // Keep local (offline) saves in sync across the app
+  useEffect(() => {
+    const onChange = () => setProfile((prev) => getLocalProfile() ?? prev);
+    window.addEventListener(PROFILE_EVENT, onChange);
+    return () => window.removeEventListener(PROFILE_EVENT, onChange);
+  }, []);
+
   useEffect(() => {
     if (!user) {
       setProfile(getLocalProfile());
