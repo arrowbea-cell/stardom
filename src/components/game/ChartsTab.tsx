@@ -33,25 +33,51 @@ interface ChartEntry {
 }
 
 export default function ChartsTab() {
+  const { world, week } = useWorld();
+  const localProfile = getLocalProfile();
   const [chartType, setChartType] = useState<ChartType>('hot_100_daily');
-  const [artists, setArtists] = useState<Profile[]>([]);
-  const [songs, setSongs] = useState<any[]>([]);
+  const [dbArtists, setDbArtists] = useState<Profile[]>([]);
+  const [dbSongs, setDbSongs] = useState<any[]>([]);
   const [chartData, setChartData] = useState<ChartEntry[]>([]);
   const [prevChartData, setPrevChartData] = useState<ChartEntry[]>([]);
-  const [currentTurn, setCurrentTurn] = useState(0);
+  const currentTurn = week;
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     Promise.all([
       supabase.from('profiles').select('*').order('total_streams', { ascending: false }).limit(50),
       supabase.from('songs').select('*, profiles!songs_artist_id_fkey(artist_name, avatar_url)').order('streams', { ascending: false }).limit(50),
-      supabase.from('game_state').select('current_turn').limit(1).single(),
-    ]).then(([{ data: a }, { data: s }, { data: gs }]) => {
-      if (a) setArtists(a as Profile[]);
-      if (s) setSongs(s);
-      if (gs) setCurrentTurn(gs.current_turn);
-    });
+    ]).then(([{ data: a }, { data: s }]) => {
+      if (a) setDbArtists(a as Profile[]);
+      if (s) setDbSongs(s);
+    }).catch(() => {});
   }, []);
+
+  // NPC world merged with anything stored online + the player's own save
+  const songs = [
+    ...dbSongs,
+    ...world.songs.map((s) => ({
+      id: s.id,
+      title: s.title,
+      streams: s.streams,
+      radio_spins: s.radio_spins,
+      cover_url: s.cover_url,
+      profiles: { artist_name: s.artist_name, avatar_url: null, genre: s.genre },
+    })),
+  ].sort((a, b) => b.streams - a.streams);
+
+  const artists = [
+    ...dbArtists,
+    ...(localProfile && !dbArtists.some((a) => a.id === localProfile.id) ? [localProfile] : []),
+    ...world.artists.map((a) => ({
+      id: a.id,
+      artist_name: a.artist_name,
+      avatar_url: a.avatar_url,
+      monthly_listeners: a.monthly_listeners,
+      total_streams: a.total_streams,
+      genre: a.genre,
+    } as unknown as Profile)),
+  ].sort((a, b) => b.monthly_listeners - a.monthly_listeners);
 
   useEffect(() => {
     const config = CHART_CONFIGS.find(c => c.type === chartType);
