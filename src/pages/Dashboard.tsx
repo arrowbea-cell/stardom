@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useProfile } from '@/hooks/useProfile';
-import { useGameState } from '@/hooks/useGameState';
+import { useWorld } from '@/hooks/useWorld';
 import { useAuth } from '@/hooks/useAuth';
 import { formatNumber, formatMoney } from '@/lib/supabase-helpers';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,7 +28,7 @@ type Tab = typeof TABS[number]['id'];
 
 export default function Dashboard() {
   const { profile } = useProfile();
-  const { gameState, formatTimeLeft } = useGameState();
+  const { week } = useWorld();
   const { signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('home');
 
