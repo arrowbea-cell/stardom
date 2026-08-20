@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Profile } from '@/hooks/useProfile';
-import { useGameState } from '@/hooks/useGameState';
+import { useWorld } from '@/hooks/useWorld';
 import { supabase } from '@/integrations/supabase/client';
 import { formatNumber, formatMoney } from '@/lib/supabase-helpers';
-import { TrendingUp, Music, DollarSign, Headphones, Users, Zap, Trophy, Radio, Star, Clock, ArrowUpRight, Activity, Disc3 } from 'lucide-react';
+import { TrendingUp, Music, DollarSign, Headphones, Users, Zap, Trophy, Radio, Star, ChevronRight, ArrowUpRight, Activity, Disc3 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 interface Props {
   profile: Profile;
