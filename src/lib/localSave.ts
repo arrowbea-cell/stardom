@@ -1,6 +1,7 @@
 import type { Profile } from '@/hooks/useProfile';
 
 const KEY = 'stardom_local_profile';
+export const PROFILE_EVENT = 'stardom:profile-changed';
 
 /** Offline-first save: used when the hosted database can't be reached. */
 export function getLocalProfile(): Profile | null {
@@ -18,6 +19,7 @@ export function saveLocalProfile(profile: Profile) {
   } catch {
     /* storage unavailable */
   }
+  window.dispatchEvent(new CustomEvent(PROFILE_EVENT));
 }
 
 export function clearLocalProfile() {

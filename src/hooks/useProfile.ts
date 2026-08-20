@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import { getLocalProfile } from '@/lib/localSave';
+import { getLocalProfile, PROFILE_EVENT } from '@/lib/localSave';
 
 export interface Profile {
   id: string;
