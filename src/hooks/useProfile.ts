@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import { getLocalProfile } from '@/lib/localSave';
+import { getLocalProfile, PROFILE_EVENT } from '@/lib/localSave';
 
 export interface Profile {
   id: string;
@@ -33,6 +33,13 @@ export function useProfile() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(() => getLocalProfile());
   const [loading, setLoading] = useState(true);
+
+  // Keep local (offline) saves in sync across the app
+  useEffect(() => {
+    const onChange = () => setProfile((prev) => getLocalProfile() ?? prev);
+    window.addEventListener(PROFILE_EVENT, onChange);
+    return () => window.removeEventListener(PROFILE_EVENT, onChange);
+  }, []);
 
   useEffect(() => {
     if (!user) {
